@@ -9,21 +9,31 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useUser } from "@/lib/hooks/useUser";
 import { useStudentData } from "@/lib/hooks/useStudentData";
 
-const mockNextLesson = {
-  number: 1,
-  date: "12 мая, вторник",
-  time: "19:00 МСК",
-  topic: "AI Mindset: новая работа в эпоху агентов",
-};
-
-const mockNextDeadline = {
-  hwNumber: 1,
-  title: "Промпт-инжиниринг",
-  deadline: "22 мая, пятница, 23:59",
-  daysLeft: 10,
-};
-
 const BOOTCAMP_START = new Date("2026-05-12");
+
+const LESSONS_SCHEDULE = [
+  { number: 1,  date: new Date("2026-05-12"), dateStr: "12 мая, вторник",  topic: "AI Mindset: новая работа в эпоху агентов" },
+  { number: 2,  date: new Date("2026-05-14"), dateStr: "14 мая, четверг",  topic: "Переход в Cowork: AI который делает" },
+  { number: 3,  date: new Date("2026-05-19"), dateStr: "19 мая, вторник",  topic: "Кодинг-агенты как класс. CC / Codex / IDE" },
+  { number: 4,  date: new Date("2026-05-21"), dateStr: "21 мая, четверг",  topic: "Vibe coding: 3 принципа + первый mini-app" },
+  { number: 5,  date: new Date("2026-05-26"), dateStr: "26 мая, вторник",  topic: "Контекст как материал. R&D подход" },
+  { number: 6,  date: new Date("2026-05-28"), dateStr: "28 мая, четверг",  topic: "Skills и Commands: четыре примитива CC" },
+  { number: 7,  date: new Date("2026-06-02"), dateStr: "2 июня, вторник",  topic: "MCP и RAG: расширяем агента" },
+  { number: 8,  date: new Date("2026-06-04"), dateStr: "4 июня, четверг",  topic: "Автоматизации 24/7 и визуальное программирование" },
+  { number: 9,  date: new Date("2026-06-09"), dateStr: "9 июня, вторник",  topic: "Маркетинг + продажи (доменные кейсы)" },
+  { number: 10, date: new Date("2026-06-11"), dateStr: "11 июня, четверг", topic: "Продукт + аналитика (доменные кейсы)" },
+  { number: 11, date: new Date("2026-06-16"), dateStr: "16 июня, вторник", topic: "Безопасный агент + multi-agent" },
+  { number: 12, date: new Date("2026-06-18"), dateStr: "18 июня, четверг", topic: "Demo Day — Защита проектов" },
+];
+
+const DEADLINES_SCHEDULE = [
+  { hwNumber: 1, title: "Промпт-инжиниринг",    date: new Date("2026-05-22"), deadlineStr: "22 мая, пятница, 23:59" },
+  { hwNumber: 2, title: "Mini-App деплой",        date: new Date("2026-06-05"), deadlineStr: "5 июня, пятница, 23:59" },
+  { hwNumber: 3, title: "CLAUDE.md + Skills",     date: new Date("2026-06-12"), deadlineStr: "12 июня, пятница, 23:59" },
+  { hwNumber: 4, title: "MCP интеграция",         date: new Date("2026-06-19"), deadlineStr: "19 июня, пятница, 23:59" },
+  { hwNumber: 5, title: "Доменный кейс",          date: new Date("2026-06-26"), deadlineStr: "26 июня, пятница, 23:59" },
+  { hwNumber: 6, title: "Demo Day презентация",   date: new Date("2026-07-03"), deadlineStr: "3 июля, пятница, 23:59" },
+];
 
 export default function HomePage() {
   const { user } = useUser();
@@ -39,6 +49,36 @@ export default function HomePage() {
     ).length ?? 0;
 
   const now = new Date();
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  const nextLessonData =
+    LESSONS_SCHEDULE.find((l) => l.date >= today) ??
+    LESSONS_SCHEDULE[LESSONS_SCHEDULE.length - 1];
+
+  const nextDeadlineData =
+    DEADLINES_SCHEDULE.find((d) => d.date >= today) ??
+    DEADLINES_SCHEDULE[DEADLINES_SCHEDULE.length - 1];
+
+  const daysLeft = Math.max(
+    0,
+    Math.ceil((nextDeadlineData.date.getTime() - today.getTime()) / (24 * 60 * 60 * 1000))
+  );
+
+  const nextLesson = {
+    number: nextLessonData.number,
+    date: nextLessonData.dateStr,
+    time: "19:00 МСК",
+    topic: nextLessonData.topic,
+  };
+
+  const nextDeadline = {
+    hwNumber: nextDeadlineData.hwNumber,
+    title: nextDeadlineData.title,
+    deadline: nextDeadlineData.deadlineStr,
+    daysLeft,
+  };
+
   const daysInBootcamp = Math.max(
     1,
     Math.ceil((now.getTime() - BOOTCAMP_START.getTime()) / (24 * 60 * 60 * 1000))
@@ -72,14 +112,14 @@ export default function HomePage() {
         <NextStepBanner
           hwCompleted={hwCompleted}
           hwTotal={6}
-          daysLeft={mockNextDeadline.daysLeft}
-          hwNumber={mockNextDeadline.hwNumber}
+          daysLeft={nextDeadline.daysLeft}
+          hwNumber={nextDeadline.hwNumber}
           peerReviewOpen={false}
           lessonToday={false}
           lessonsCompleted={lessonsCompleted}
           lessonsTotal={12}
-          nextLessonNumber={mockNextLesson.number}
-          nextLessonTopic={mockNextLesson.topic}
+          nextLessonNumber={nextLesson.number}
+          nextLessonTopic={nextLesson.topic}
         />
 
         {loading ? (
@@ -107,8 +147,8 @@ export default function HomePage() {
         )}
 
         <UpcomingEvents
-          nextLesson={mockNextLesson}
-          nextDeadline={mockNextDeadline}
+          nextLesson={nextLesson}
+          nextDeadline={nextDeadline}
         />
 
         <QuickLinks />
