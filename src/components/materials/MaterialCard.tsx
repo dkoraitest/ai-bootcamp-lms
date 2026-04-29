@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type MaterialType = "video" | "template" | "technique" | "resource";
+type MaterialType = "video" | "template" | "technique";
 
 export interface Material {
   id: number;
@@ -27,7 +27,6 @@ const TYPE_CONFIG: Record<
   video:     { label: "Видео",   emoji: "📹", classes: "bg-purple-100 text-purple-700" },
   template:  { label: "Шаблон",  emoji: "📄", classes: "bg-orange-100 text-orange-700" },
   technique: { label: "Техника", emoji: "💡", classes: "bg-blue-100 text-blue-700" },
-  resource:  { label: "Ресурс",  emoji: "📦", classes: "bg-zinc-100 text-zinc-600" },
 };
 
 export default function MaterialCard({ material }: Props) {

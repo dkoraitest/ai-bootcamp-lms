@@ -13,14 +13,13 @@ create table if not exists material_urls (
   url         text not null default ''
 );
 
--- Seed all 32 material slots (update URLs in Table Editor later)
+-- Seed all 27 material slots (update URLs in Table Editor later)
 insert into material_urls (material_id, url) values
   (1,  ''), (2,  ''), (3,  ''), (4,  ''), (5,  ''), (6,  ''),
   (7,  ''), (8,  ''), (9,  ''), (10, ''), (11, ''), (12, ''),
   (13, ''), (14, ''), (15, ''), (16, ''), (17, ''), (18, ''),
   (19, ''), (20, ''), (21, ''), (22, ''), (23, ''), (24, ''),
-  (25, ''), (26, ''), (27, ''), (28, ''), (29, ''), (30, ''),
-  (31, ''), (32, '')
+  (25, ''), (26, ''), (27, '')
 on conflict (material_id) do nothing;
 
 -- RLS: authenticated users can read

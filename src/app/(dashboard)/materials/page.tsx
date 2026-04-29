@@ -8,7 +8,7 @@ import WeekFilterPills from "@/components/materials/WeekFilterPills";
 import MaterialsEmptyState from "@/components/materials/MaterialsEmptyState";
 import { useMaterialUrls } from "@/lib/hooks/useContentUrls";
 
-type TabKey = "all" | "video" | "template" | "technique" | "resource";
+type TabKey = "all" | "video" | "template" | "technique";
 type WeekValue = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 const MATERIALS: Material[] = [
@@ -42,12 +42,6 @@ const MATERIALS: Material[] = [
   { id: 25, title: "MCP connection flow",                                    type: "technique", week: 4, lessonId: 7,  lessonTopic: "MCP + RAG",       url: "#", markdownContent: "## MCP Connection Flow\n\nInstall → Configure → Authenticate → Test → Use in Agent" },
   { id: 26, title: "3 уровня доверия для автоматизаций",                    type: "technique", week: 4, lessonId: 8,  lessonTopic: "Автоматизации",   url: "#", markdownContent: "## 3 уровня доверия\n\n1. **Supervised** — агент предлагает, человек подтверждает\n2. **Semi-auto** — агент действует, человек проверяет результат\n3. **Autonomous** — агент действует и отчитывается" },
   { id: 27, title: "Trust boundaries checklist",                             type: "technique", week: 6, lessonId: 11, lessonTopic: "Безопасность",    url: "#", markdownContent: "## Trust Boundaries Checklist\n\n- [ ] Scope файловой системы ограничен\n- [ ] Деструктивные действия требуют подтверждения\n- [ ] Секреты не передаются в промпт\n- [ ] Stop conditions заданы" },
-  // РЕСУРСЫ
-  { id: 28, title: "skills_v2.csv — Skill Matrix",                          type: "resource",  week: 1, lessonId: 1,  lessonTopic: "Все недели",      url: "#", description: "CSV-файл с матрицей 10 навыков × 3 уровня" },
-  { id: 29, title: "assignments_v2.csv — структура ДЗ",                     type: "resource",  week: 1, lessonId: 2,  lessonTopic: "Все недели",      url: "#", description: "CSV со всеми домашними заданиями и рубриками" },
-  { id: 30, title: "lessons_v2.csv — расписание",                           type: "resource",  week: 1, lessonId: 1,  lessonTopic: "Все недели",      url: "#", description: "12 уроков с датами и темами" },
-  { id: 31, title: "11_PEDAGOGY.md — методология",                          type: "resource",  week: 1, lessonId: 1,  lessonTopic: "Все недели",      url: "#", description: "Полная методологическая документация буткемпа" },
-  { id: 32, title: "Google Drive — все материалы",                           type: "resource",  week: 1, lessonId: 1,  lessonTopic: "Все недели",      url: "#", description: "Общая папка с записями, шаблонами и ДЗ" },
 ];
 
 function matchesSearch(m: Material, q: string): boolean {
@@ -92,7 +86,6 @@ export default function MaterialsPage() {
       video:     base.filter((m) => m.type === "video").length,
       template:  base.filter((m) => m.type === "template").length,
       technique: base.filter((m) => m.type === "technique").length,
-      resource:  base.filter((m) => m.type === "resource").length,
     };
   }, [materials, searchQuery, activeWeek]);
 

@@ -1,4 +1,4 @@
-type TabKey = "all" | "video" | "template" | "technique" | "resource";
+type TabKey = "all" | "video" | "template" | "technique";
 
 type Counts = Record<TabKey, number>;
 
@@ -13,7 +13,6 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "video",     label: "📹 Видео" },
   { key: "template",  label: "📄 Шаблоны" },
   { key: "technique", label: "💡 Техники" },
-  { key: "resource",  label: "📦 Ресурсы" },
 ];
 
 export default function MaterialTabs({ activeTab, onTabChange, counts }: Props) {
