@@ -1,7 +1,6 @@
 import NextStepBanner from "@/components/dashboard/NextStepBanner";
 import ProgressWidget from "@/components/dashboard/ProgressWidget";
 import GamificationWidget from "@/components/dashboard/GamificationWidget";
-import LaunchTracker from "@/components/dashboard/LaunchTracker";
 import UpcomingEvents from "@/components/dashboard/UpcomingEvents";
 import QuickLinks from "@/components/dashboard/QuickLinks";
 
@@ -69,8 +68,6 @@ export default function HomePage() {
           lessonsTotal={mockProgress.lessonsTotal}
           hwCompleted={mockProgress.hwCompleted}
           hwTotal={mockProgress.hwTotal}
-          launchesThisWeek={mockProgress.launchesThisWeek}
-          launchesTarget={mockProgress.launchesTarget}
         />
 
         <GamificationWidget
@@ -79,12 +76,6 @@ export default function HomePage() {
           points={mockStudent.points}
           pointsToNext={mockStudent.pointsToNext}
           lastBadge={mockStudent.lastBadge}
-        />
-
-        <LaunchTracker
-          launchDaysThisWeek={mockProgress.launchDaysThisWeek}
-          launchesThisWeek={mockProgress.launchesThisWeek}
-          launchesTarget={mockProgress.launchesTarget}
         />
 
         <UpcomingEvents

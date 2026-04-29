@@ -10,8 +10,6 @@ type Props = {
   lessonsTotal: number;
   hwCompleted: number;
   hwTotal: number;
-  launchesThisWeek: number;
-  launchesTarget: number;
 };
 
 function ProgressBar({ label, value, total, color }: Bar) {
@@ -39,8 +37,6 @@ export default function ProgressWidget({
   lessonsTotal,
   hwCompleted,
   hwTotal,
-  launchesThisWeek,
-  launchesTarget,
 }: Props) {
   return (
     <div className="col-span-1 lg:col-span-2 bg-white rounded-[8px] border border-[#e4e4e7] shadow-sm p-6 space-y-5">
@@ -56,12 +52,6 @@ export default function ProgressWidget({
         value={hwCompleted}
         total={hwTotal}
         color="#16a34a"
-      />
-      <ProgressBar
-        label="Запусков агента (неделя)"
-        value={launchesThisWeek}
-        total={launchesTarget}
-        color="#d97706"
       />
     </div>
   );

@@ -1,10 +1,10 @@
 import { ChevronRight } from "lucide-react";
 
 const LINKS = [
-  { emoji: "💬", label: "Общий чат Telegram" },
-  { emoji: "📁", label: "Google Drive с материалами" },
-  { emoji: "👤", label: "@alinkasworld — вопросы" },
-  { emoji: "👤", label: "@kirarxx — вопросы" },
+  { emoji: "💬", label: "Общий чат Telegram",       href: "#" },
+  { emoji: "👤", label: "@d_korob — спикер",         href: "https://t.me/d_korob" },
+  { emoji: "👤", label: "@paul_zhuravlev — спикер",  href: "https://t.me/paul_zhuravlev" },
+  { emoji: "👤", label: "@kirarxx — вопросы",        href: "https://t.me/kirarxx" },
 ];
 
 export default function QuickLinks() {
@@ -15,7 +15,9 @@ export default function QuickLinks() {
         {LINKS.map((link, i) => (
           <a
             key={i}
-            href="#"
+            href={link.href}
+            target={link.href !== "#" ? "_blank" : undefined}
+            rel={link.href !== "#" ? "noopener noreferrer" : undefined}
             className={`flex items-center justify-between py-2.5 hover:bg-zinc-50 cursor-pointer transition-colors px-1 rounded ${
               i < LINKS.length - 1 ? "border-b border-[#e4e4e7]" : ""
             }`}
