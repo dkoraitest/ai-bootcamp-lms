@@ -6,6 +6,7 @@ import MaterialCard, { type Material } from "@/components/materials/MaterialCard
 import MaterialTabs from "@/components/materials/MaterialTabs";
 import WeekFilterPills from "@/components/materials/WeekFilterPills";
 import MaterialsEmptyState from "@/components/materials/MaterialsEmptyState";
+import { useMaterialUrls } from "@/lib/hooks/useContentUrls";
 
 type TabKey = "all" | "video" | "template" | "technique" | "resource";
 type WeekValue = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -61,21 +62,27 @@ function matchesSearch(m: Material, q: string): boolean {
 }
 
 export default function MaterialsPage() {
+  const materialUrls = useMaterialUrls();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [activeWeek, setActiveWeek] = useState<WeekValue>(0);
 
+  const materials = useMemo(
+    () => MATERIALS.map((m) => ({ ...m, url: materialUrls[m.id] ?? "" })),
+    [materialUrls]
+  );
+
   const filtered = useMemo(() => {
-    return MATERIALS.filter((m) => {
+    return materials.filter((m) => {
       const matchesTab = activeTab === "all" || m.type === activeTab;
       const matchesWeek = activeWeek === 0 || m.week === activeWeek;
       return matchesTab && matchesWeek && matchesSearch(m, searchQuery);
     });
-  }, [searchQuery, activeTab, activeWeek]);
+  }, [materials, searchQuery, activeTab, activeWeek]);
 
   // Counts per type for the current week+search (tab-agnostic)
   const tabCounts = useMemo(() => {
-    const base = MATERIALS.filter(
+    const base = materials.filter(
       (m) =>
         (activeWeek === 0 || m.week === activeWeek) &&
         matchesSearch(m, searchQuery)
@@ -87,7 +94,7 @@ export default function MaterialsPage() {
       technique: base.filter((m) => m.type === "technique").length,
       resource:  base.filter((m) => m.type === "resource").length,
     };
-  }, [searchQuery, activeWeek]);
+  }, [materials, searchQuery, activeWeek]);
 
   const resetFilters = () => {
     setActiveTab("all");

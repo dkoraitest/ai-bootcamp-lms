@@ -72,16 +72,18 @@ export default function MaterialCard({ material }: Props) {
             >
               {copied ? "✅ Скопировано" : "📋 Скопировать markdown"}
             </button>
-            <a
-              href={material.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#2563eb] text-xs hover:underline whitespace-nowrap shrink-0"
-            >
-              Открыть →
-            </a>
+            {material.url && (
+              <a
+                href={material.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#2563eb] text-xs hover:underline whitespace-nowrap shrink-0"
+              >
+                Открыть →
+              </a>
+            )}
           </>
-        ) : (
+        ) : material.url ? (
           <a
             href={material.url}
             target="_blank"
@@ -90,6 +92,10 @@ export default function MaterialCard({ material }: Props) {
           >
             Открыть →
           </a>
+        ) : (
+          <span className="w-full bg-zinc-100 text-zinc-400 text-xs rounded-md px-3 py-1.5 text-center">
+            Скоро
+          </span>
         )}
       </div>
     </div>

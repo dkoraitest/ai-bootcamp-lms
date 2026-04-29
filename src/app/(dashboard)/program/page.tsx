@@ -1,6 +1,9 @@
+"use client";
+
 import ProgramProgressBar from "@/components/program/ProgramProgressBar";
 import WeekBlock from "@/components/program/WeekBlock";
 import { type AssignmentData } from "@/components/program/AssignmentCard";
+import { useLessonUrls } from "@/lib/hooks/useContentUrls";
 
 const LESSONS = [
   { id: 1,  week: 1, date: "12.05.2026", topic: "AI Mindset: новая работа в эпоху агентов",             hasHw: false,                status: "completed" as const, videoUrl: "#" },
@@ -160,9 +163,17 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
 };
 
 const WEEKS = [1, 2, 3, 4, 5, 6];
-const completedCount = LESSONS.filter((l) => l.status === "completed").length;
 
 export default function ProgramPage() {
+  const lessonUrls = useLessonUrls();
+
+  const lessons = LESSONS.map((l) => ({
+    ...l,
+    videoUrl: lessonUrls[l.id] ?? "",
+  }));
+
+  const completedCount = lessons.filter((l) => l.status === "completed").length;
+
   return (
     <div>
       <div className="mb-6">
@@ -180,7 +191,7 @@ export default function ProgramPage() {
             key={week}
             weekNumber={week}
             theme={WEEK_THEMES[week]}
-            lessons={LESSONS.filter((l) => l.week === week)}
+            lessons={lessons.filter((l) => l.week === week)}
             techniques={TECHNIQUES}
             assignments={ASSIGNMENTS}
             defaultOpen={week === 1}
