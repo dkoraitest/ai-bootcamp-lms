@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import AssignmentSummaryBar from "@/components/assignments/AssignmentSummaryBar";
 import AssignmentFilters, { FilterKey } from "@/components/assignments/AssignmentFilters";
 import AssignmentPageCard, { AssignmentData } from "@/components/assignments/AssignmentPageCard";
+import { useUser } from "@/lib/hooks/useUser";
 
 const ASSIGNMENTS: AssignmentData[] = [
   {
@@ -13,10 +14,10 @@ const ASSIGNMENTS: AssignmentData[] = [
     lessonId: 2,
     lessonTitle: "Урок 2 — Архитектура промптов",
     deadline: "22.05.2026",
-    status: "reviewed",
+    status: "not_started",
     points: 50,
-    pointsEarned: 45,
-    githubUrl: "https://github.com/user/hw1",
+    pointsEarned: null,
+    githubUrl: "",
     videoUrl: "",
     description:
       "Напиши системный промпт для агента в своей доменной зоне. Промпт должен включать роль, контекст, ограничения и примеры.",
@@ -27,13 +28,12 @@ const ASSIGNMENTS: AssignmentData[] = [
       "README с объяснением выбора домена",
     ],
     checklist: [
-      { id: 1, text: "Написал системный промпт", done: true },
-      { id: 2, text: "Добавил 3+ few-shot примера", done: true },
-      { id: 3, text: "Описал ограничения агента", done: true },
-      { id: 4, text: "Запушил в GitHub", done: true },
+      { id: 1, text: "Написал системный промпт", done: false },
+      { id: 2, text: "Добавил 3+ few-shot примера", done: false },
+      { id: 3, text: "Описал ограничения агента", done: false },
+      { id: 4, text: "Запушил в GitHub", done: false },
     ],
-    feedback:
-      "Отличная работа! Промпт чёткий, примеры релевантные. Рекомендую добавить больше edge-кейсов в следующем ДЗ.",
+    feedback: null,
   },
   {
     id: 2,
@@ -42,7 +42,7 @@ const ASSIGNMENTS: AssignmentData[] = [
     lessonId: 4,
     lessonTitle: "Урок 4 — Vibe Coding",
     deadline: "05.06.2026",
-    status: "in_progress",
+    status: "not_started",
     points: 60,
     pointsEarned: null,
     githubUrl: "",
@@ -56,7 +56,7 @@ const ASSIGNMENTS: AssignmentData[] = [
       "README с описанием что делает приложение",
     ],
     checklist: [
-      { id: 1, text: "Выбрал идею приложения", done: true },
+      { id: 1, text: "Выбрал идею приложения", done: false },
       { id: 2, text: "Написал код с Claude Code", done: false },
       { id: 3, text: "Задеплоил приложение", done: false },
       { id: 4, text: "Написал README", done: false },
@@ -183,6 +183,9 @@ const FILTER_MATCH: Record<FilterKey, AssignmentData["status"][]> = {
 };
 
 export default function AssignmentsPage() {
+  const { user } = useUser();
+  const isExpert = (user?.app_metadata as Record<string, unknown> | undefined)?.role === "expert";
+
   const [filter, setFilter] = useState<FilterKey>("all");
 
   const counts = useMemo(() => {
@@ -217,7 +220,8 @@ export default function AssignmentsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-900">Домашние задания</h1>
         <p className="text-sm text-[#71717a] mt-1">
-          {totalPoints} / {maxPoints} очков · 1 из 6 проверено
+          {totalPoints} / {maxPoints} очков
+          {isExpert && <span className="ml-2 text-purple-600 font-medium">· Режим эксперта</span>}
         </p>
       </div>
 
@@ -232,7 +236,7 @@ export default function AssignmentsPage() {
 
         <div className="flex flex-col gap-3">
           {filtered.map((assignment) => (
-            <AssignmentPageCard key={assignment.id} assignment={assignment} />
+            <AssignmentPageCard key={assignment.id} assignment={assignment} isExpert={isExpert} />
           ))}
         </div>
       </div>
