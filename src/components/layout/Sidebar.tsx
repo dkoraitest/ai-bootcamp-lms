@@ -1,28 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
-  { emoji: "🏠", label: "Главная", href: "/" },
-  { emoji: "📅", label: "Программа", href: "/program" },
+  { emoji: "🏠", label: "Главная",           href: "/" },
+  { emoji: "📅", label: "Программа",         href: "/program" },
   { emoji: "📚", label: "Каталог материалов", href: "/materials" },
-  { emoji: "✅", label: "Домашние задания", href: "/assignments" },
-  { emoji: "🧠", label: "Навыки", href: "/skills" },
-  { emoji: "📊", label: "Мой прогресс", href: "/progress" },
-  { emoji: "👥", label: "Пир-ревью", href: "/peer-review" },
-  { emoji: "🔍", label: "Поиск", href: "/search" },
+  { emoji: "✅", label: "Домашние задания",   href: "/assignments" },
+  { emoji: "🧠", label: "Навыки",            href: "/skills" },
+  { emoji: "📊", label: "Мой прогресс",      href: "/progress" },
+  { emoji: "👥", label: "Пир-ревью",         href: "/peer-review" },
+  { emoji: "🔍", label: "Поиск",             href: "/search" },
 ];
 
-export default function Sidebar() {
+type Props = {
+  userName?: string;
+};
+
+export default function Sidebar({ userName }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
 
   return (
     <aside className="hidden md:flex flex-col w-64 shrink-0 bg-white border-r border-[#e4e4e7] h-screen sticky top-0">
       <div className="px-6 py-5 border-b border-[#e4e4e7]">
         <span className="font-semibold text-[#18181b] text-base">AI Agents Bootcamp</span>
+        {userName && (
+          <p className="text-xs text-zinc-500 mt-0.5 truncate">{userName}</p>
+        )}
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -44,6 +60,15 @@ export default function Sidebar() {
           );
         })}
       </nav>
+      <div className="px-3 py-4 border-t border-zinc-200">
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-3 px-3 py-2 w-full text-sm text-zinc-500 hover:text-red-600 rounded-[6px] hover:bg-zinc-50 transition-colors"
+        >
+          <LogOut size={16} />
+          Выйти
+        </button>
+      </div>
     </aside>
   );
 }
