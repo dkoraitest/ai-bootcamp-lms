@@ -10,17 +10,17 @@ import { useUser } from "@/lib/hooks/useUser";
 import { useStudentData } from "@/lib/hooks/useStudentData";
 
 const mockNextLesson = {
-  number: 4,
-  date: "21 мая, среда",
+  number: 1,
+  date: "12 мая, вторник",
   time: "19:00 МСК",
-  topic: "Vibe coding: 3 принципа + первый mini-app",
+  topic: "AI Mindset: новая работа в эпоху агентов",
 };
 
 const mockNextDeadline = {
   hwNumber: 1,
-  title: "Первая Cowork-автоматизация",
-  deadline: "25 мая, воскресенье, 23:59",
-  daysLeft: 4,
+  title: "Промпт-инжиниринг",
+  deadline: "22 мая, пятница, 23:59",
+  daysLeft: 10,
 };
 
 const BOOTCAMP_START = new Date("2026-05-12");
