@@ -4,7 +4,9 @@
 -- After this, add/edit materials in Table Editor → materials
 -- ============================================================
 
-create table if not exists materials (
+drop table if exists materials;
+
+create table materials (
   id               int  primary key,
   title            text not null,
   type             text not null check (type in ('video', 'template', 'technique')),

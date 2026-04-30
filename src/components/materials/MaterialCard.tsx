@@ -78,7 +78,7 @@ export default function MaterialCard({ material }: Props) {
                 rel="noopener noreferrer"
                 className="text-[#2563eb] text-xs hover:underline whitespace-nowrap shrink-0"
               >
-                Открыть →
+                ▶️ Смотреть
               </a>
             )}
           </>
