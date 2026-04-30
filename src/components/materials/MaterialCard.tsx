@@ -65,21 +65,22 @@ export default function MaterialCard({ material }: Props) {
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-zinc-100">
         {material.type === "technique" ? (
           <>
-            <button
-              onClick={handleCopy}
-              className="flex-1 border border-zinc-300 bg-white text-zinc-700 text-xs rounded-md px-3 py-1.5 hover:bg-zinc-50 transition-colors"
-            >
-              {copied ? "✅ Скопировано" : "📋 Скопировать markdown"}
-            </button>
-            {material.url && (
+            {material.url ? (
               <a
                 href={material.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#2563eb] text-xs hover:underline whitespace-nowrap shrink-0"
+                className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs rounded-md px-3 py-1.5 text-center transition-colors"
               >
                 ▶️ Смотреть
               </a>
+            ) : (
+              <button
+                onClick={handleCopy}
+                className="flex-1 border border-zinc-300 bg-white text-zinc-700 text-xs rounded-md px-3 py-1.5 hover:bg-zinc-50 transition-colors"
+              >
+                {copied ? "✅ Скопировано" : "📋 Скопировать markdown"}
+              </button>
             )}
           </>
         ) : material.url ? (
