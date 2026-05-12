@@ -12,18 +12,18 @@ import { useStudentData } from "@/lib/hooks/useStudentData";
 const BOOTCAMP_START = new Date("2026-05-12");
 
 const LESSONS_SCHEDULE = [
-  { number: 1,  date: new Date("2026-05-12"), dateStr: "12 мая, вторник",  topic: "AI Mindset: новая работа в эпоху агентов" },
-  { number: 2,  date: new Date("2026-05-14"), dateStr: "14 мая, четверг",  topic: "Переход в Cowork: AI который делает" },
-  { number: 3,  date: new Date("2026-05-19"), dateStr: "19 мая, вторник",  topic: "Кодинг-агенты как класс. CC / Codex / IDE" },
-  { number: 4,  date: new Date("2026-05-21"), dateStr: "21 мая, четверг",  topic: "Vibe coding: 3 принципа + первый mini-app" },
-  { number: 5,  date: new Date("2026-05-26"), dateStr: "26 мая, вторник",  topic: "Контекст как материал. R&D подход" },
-  { number: 6,  date: new Date("2026-05-28"), dateStr: "28 мая, четверг",  topic: "Skills и Commands: четыре примитива CC" },
-  { number: 7,  date: new Date("2026-06-02"), dateStr: "2 июня, вторник",  topic: "MCP и RAG: расширяем агента" },
-  { number: 8,  date: new Date("2026-06-04"), dateStr: "4 июня, четверг",  topic: "Автоматизации 24/7 и визуальное программирование" },
-  { number: 9,  date: new Date("2026-06-09"), dateStr: "9 июня, вторник",  topic: "Маркетинг + продажи (доменные кейсы)" },
-  { number: 10, date: new Date("2026-06-11"), dateStr: "11 июня, четверг", topic: "Продукт + аналитика (доменные кейсы)" },
-  { number: 11, date: new Date("2026-06-16"), dateStr: "16 июня, вторник", topic: "Безопасный агент + multi-agent" },
-  { number: 12, date: new Date("2026-06-18"), dateStr: "18 июня, четверг", topic: "Demo Day — Защита проектов" },
+  { number: 1,  date: new Date("2026-05-12"), dateStr: "12 мая, вторник",  time: "14:30 МСК", topic: "AI Mindset: новая работа в эпоху агентов" },
+  { number: 2,  date: new Date("2026-05-14"), dateStr: "14 мая, четверг",  time: "18:00 МСК", topic: "Переход в Cowork: AI который делает" },
+  { number: 3,  date: new Date("2026-05-19"), dateStr: "19 мая, вторник",  time: "14:30 МСК", topic: "Кодинг-агенты как класс. CC / Codex / IDE" },
+  { number: 4,  date: new Date("2026-05-21"), dateStr: "21 мая, четверг",  time: "18:00 МСК", topic: "Vibe coding: 3 принципа + первый mini-app" },
+  { number: 5,  date: new Date("2026-05-26"), dateStr: "26 мая, вторник",  time: "14:30 МСК", topic: "Контекст как материал. R&D подход" },
+  { number: 6,  date: new Date("2026-05-28"), dateStr: "28 мая, четверг",  time: "18:00 МСК", topic: "Skills и Commands: четыре примитива CC" },
+  { number: 7,  date: new Date("2026-06-02"), dateStr: "2 июня, вторник",  time: "14:30 МСК", topic: "MCP и RAG: расширяем агента" },
+  { number: 8,  date: new Date("2026-06-04"), dateStr: "4 июня, четверг",  time: "18:00 МСК", topic: "Автоматизации 24/7 и визуальное программирование" },
+  { number: 9,  date: new Date("2026-06-09"), dateStr: "9 июня, вторник",  time: "14:30 МСК", topic: "Маркетинг + продажи (доменные кейсы)" },
+  { number: 10, date: new Date("2026-06-11"), dateStr: "11 июня, четверг", time: "18:00 МСК", topic: "Продукт + аналитика (доменные кейсы)" },
+  { number: 11, date: new Date("2026-06-16"), dateStr: "16 июня, вторник", time: "14:30 МСК", topic: "Безопасный агент + multi-agent" },
+  { number: 12, date: new Date("2026-06-18"), dateStr: "18 июня, четверг", time: "18:00 МСК", topic: "Demo Day — Защита проектов" },
 ];
 
 const DEADLINES_SCHEDULE = [
@@ -68,7 +68,7 @@ export default function HomePage() {
   const nextLesson = {
     number: nextLessonData.number,
     date: nextLessonData.dateStr,
-    time: "19:00 МСК",
+    time: nextLessonData.time,
     topic: nextLessonData.topic,
   };
 
