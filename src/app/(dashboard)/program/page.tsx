@@ -6,9 +6,9 @@ import { type AssignmentData } from "@/components/program/AssignmentCard";
 import { useLessonUrls } from "@/lib/hooks/useContentUrls";
 
 const LESSONS = [
-  { id: 1,  week: 1, date: "12.05.2026", topic: "AI Mindset: новая работа в эпоху агентов",             hasHw: false,                status: "completed" as const, videoUrl: "#" },
-  { id: 2,  week: 1, date: "14.05.2026", topic: "Переход в Cowork: AI который делает",                   hasHw: true,  hwNumber: 1,  status: "completed" as const, videoUrl: "#" },
-  { id: 3,  week: 2, date: "19.05.2026", topic: "Кодинг-агенты как класс. CC / Codex / IDE",             hasHw: false,                status: "watching"  as const, videoUrl: "#" },
+  { id: 1,  week: 1, date: "12.05.2026", topic: "AI Mindset: новая работа в эпоху агентов",             hasHw: false,                status: "locked" as const, videoUrl: "#" },
+  { id: 2,  week: 1, date: "14.05.2026", topic: "Переход в Cowork: AI который делает",                   hasHw: true,  hwNumber: 1,  status: "locked" as const, videoUrl: "#" },
+  { id: 3,  week: 2, date: "19.05.2026", topic: "Кодинг-агенты как класс. CC / Codex / IDE",             hasHw: false,                status: "locked" as const, videoUrl: "#" },
   { id: 4,  week: 2, date: "21.05.2026", topic: "Vibe coding: 3 принципа + первый mini-app",             hasHw: true,  hwNumber: 2,  status: "locked"    as const, videoUrl: "#" },
   { id: 5,  week: 3, date: "26.05.2026", topic: "Контекст как материал. R&D подход",                     hasHw: false,                status: "locked"    as const, videoUrl: "#" },
   { id: 6,  week: 3, date: "28.05.2026", topic: "Skills и Commands: четыре примитива CC",                hasHw: true,  hwNumber: 3,  status: "locked"    as const, videoUrl: "#" },
