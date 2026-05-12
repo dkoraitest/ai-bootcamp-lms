@@ -277,7 +277,7 @@ export default function AssignmentPageCard({ assignment, isExpert = false }: Pro
                   {(assignment.hwNumber === 1 || assignment.hwNumber === 2 ||
                     assignment.hwNumber === 3 || assignment.hwNumber === 5) && (
                     <div>
-                      <label className="block text-xs font-medium text-zinc-700 mb-1">GitHub ссылка *</label>
+                      <label className="block text-xs font-medium text-zinc-700 mb-1">Ссылка *</label>
                       <input
                         type="url"
                         value={githubUrl}
