@@ -27,12 +27,12 @@ const LESSONS_SCHEDULE = [
 ];
 
 const DEADLINES_SCHEDULE = [
-  { hwNumber: 1, title: "Промпт-инжиниринг",    date: new Date("2026-05-22"), deadlineStr: "22 мая, пятница, 23:59" },
-  { hwNumber: 2, title: "Mini-App деплой",        date: new Date("2026-06-05"), deadlineStr: "5 июня, пятница, 23:59" },
-  { hwNumber: 3, title: "CLAUDE.md + Skills",     date: new Date("2026-06-12"), deadlineStr: "12 июня, пятница, 23:59" },
-  { hwNumber: 4, title: "MCP интеграция",         date: new Date("2026-06-19"), deadlineStr: "19 июня, пятница, 23:59" },
-  { hwNumber: 5, title: "Доменный кейс",          date: new Date("2026-06-26"), deadlineStr: "26 июня, пятница, 23:59" },
-  { hwNumber: 6, title: "Demo Day презентация",   date: new Date("2026-07-03"), deadlineStr: "3 июля, пятница, 23:59" },
+  { hwNumber: 1, title: "Промпт-инжиниринг",    date: new Date("2026-05-17"), deadlineStr: "17 мая, воскресенье, 23:59" },
+  { hwNumber: 2, title: "Mini-App деплой",        date: new Date("2026-05-24"), deadlineStr: "24 мая, воскресенье, 23:59" },
+  { hwNumber: 3, title: "CLAUDE.md + Skills",     date: new Date("2026-05-31"), deadlineStr: "31 мая, воскресенье, 23:59" },
+  { hwNumber: 4, title: "MCP интеграция",         date: new Date("2026-06-07"), deadlineStr: "7 июня, воскресенье, 23:59" },
+  { hwNumber: 5, title: "Доменный кейс",          date: new Date("2026-06-14"), deadlineStr: "14 июня, воскресенье, 23:59" },
+  { hwNumber: 6, title: "Demo Day презентация",   date: new Date("2026-06-21"), deadlineStr: "21 июня, воскресенье, 23:59" },
 ];
 
 export default function HomePage() {
