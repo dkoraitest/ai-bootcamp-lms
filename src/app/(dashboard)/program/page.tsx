@@ -172,7 +172,7 @@ export default function ProgramPage() {
     videoUrl: lessonUrls[l.id] ?? "",
   }));
 
-  const completedCount = lessons.filter((l) => l.status === "completed").length;
+  const completedCount = lessons.filter((l) => (l.status as string) === "completed").length;
 
   return (
     <div>
