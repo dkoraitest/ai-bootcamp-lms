@@ -58,10 +58,12 @@ export default function LessonCard({ lesson, techniques }: Props) {
 
         {/* Right column */}
         <div className="shrink-0 flex flex-col items-end gap-2">
-          <span className={`text-xs font-medium px-2 py-1 rounded ${cfg.classes}`}>
-            {cfg.emoji} {cfg.label}
-          </span>
-          {lesson.videoUrl ? (
+          {!lesson.videoUrl && (
+            <span className={`text-xs font-medium px-2 py-1 rounded ${cfg.classes}`}>
+              {cfg.emoji} {cfg.label}
+            </span>
+          )}
+          {lesson.videoUrl && (
             <a
               href={lesson.videoUrl}
               target="_blank"
@@ -70,7 +72,7 @@ export default function LessonCard({ lesson, techniques }: Props) {
             >
               ▶️ Смотреть запись
             </a>
-          ) : null}
+          )}
         </div>
       </div>
 
