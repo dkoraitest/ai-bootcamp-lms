@@ -61,7 +61,7 @@ export default function LessonCard({ lesson, techniques }: Props) {
           <span className={`text-xs font-medium px-2 py-1 rounded ${cfg.classes}`}>
             {cfg.emoji} {cfg.label}
           </span>
-          {lesson.status !== "locked" && lesson.videoUrl ? (
+          {lesson.videoUrl ? (
             <a
               href={lesson.videoUrl}
               target="_blank"
@@ -70,10 +70,6 @@ export default function LessonCard({ lesson, techniques }: Props) {
             >
               ▶️ Смотреть запись
             </a>
-          ) : lesson.status !== "locked" ? (
-            <span className="whitespace-nowrap bg-zinc-50 border border-zinc-200 text-zinc-400 text-sm rounded-md px-3 py-1.5">
-              ▶️ Запись скоро
-            </span>
           ) : null}
         </div>
       </div>
