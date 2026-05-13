@@ -4,6 +4,25 @@ alter table assignment_submissions
   add column if not exists feedback text,
   add column if not exists points_earned int;
 
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'assignment_submissions'
+      and column_name = 'assignment_id'
+      and data_type = 'uuid'
+  ) then
+    alter table assignment_submissions
+      drop constraint if exists assignment_submissions_assignment_id_fkey;
+    alter table assignment_submissions
+      alter column assignment_id drop default;
+    alter table assignment_submissions
+      alter column assignment_id type int using null;
+  end if;
+end $$;
+
 create table if not exists user_notifications (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,

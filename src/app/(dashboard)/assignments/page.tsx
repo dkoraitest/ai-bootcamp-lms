@@ -376,9 +376,10 @@ export default function AssignmentsPage() {
     });
 
     if (error) {
+      console.error("submit_student_assignment failed", error);
       return {
         ok: false,
-        error: "Не удалось отправить ДЗ. Проверь ссылки и попробуй ещё раз.",
+        error: `Не удалось отправить ДЗ: ${error.message}`,
       };
     }
 
