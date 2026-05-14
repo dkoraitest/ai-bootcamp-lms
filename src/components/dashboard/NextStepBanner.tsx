@@ -43,7 +43,7 @@ function getBannerText(props: Props): string {
 export default function NextStepBanner(props: Props) {
   const text = getBannerText(props);
   const className =
-    "col-span-1 lg:col-span-3 bg-[#2563eb] hover:bg-[#1d4ed8] transition-colors rounded-[8px] px-6 py-5 flex items-center justify-between cursor-pointer";
+    "col-span-1 lg:col-span-3 bg-[#4f46e5] hover:bg-[#4338ca] transition-colors rounded-[8px] px-6 py-5 flex items-center justify-between cursor-pointer";
 
   const content = (
     <>

@@ -16,11 +16,11 @@ export default function GamificationWidget({
   const xpPct = Math.round((points / pointsToNext) * 100);
 
   return (
-    <div className="col-span-1 bg-white rounded-[8px] border border-[#e4e4e7] shadow-sm p-6 flex flex-col gap-4">
+    <div className="col-span-1 bg-[#fafafa] rounded-[8px] border border-[#e4e4e7] shadow-sm p-6 flex flex-col gap-4">
       <h2 className="font-semibold text-[#18181b]">Уровень</h2>
 
       <div className="flex flex-col items-center gap-2">
-        <div className="w-16 h-16 rounded-full bg-[#2563eb] flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-[#4f46e5] flex items-center justify-center">
           <span className="text-white font-bold text-2xl">{level}</span>
         </div>
         <span className="font-semibold text-[#18181b]">{levelName}</span>
@@ -29,7 +29,7 @@ export default function GamificationWidget({
         </span>
         <div className="w-full h-2 rounded-full bg-zinc-100 overflow-hidden">
           <div
-            className="h-full rounded-full bg-[#2563eb] transition-all duration-500"
+            className="h-full rounded-full bg-[#4f46e5] transition-all duration-500"
             style={{ width: `${xpPct}%` }}
           />
         </div>
