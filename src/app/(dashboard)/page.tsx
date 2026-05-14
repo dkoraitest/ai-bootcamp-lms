@@ -41,8 +41,11 @@ export default function HomePage() {
 
   const userName = (user?.user_metadata?.name as string | undefined) ?? "Студент";
 
-  const lessonsCompleted =
+  const lessonsCompletedFromDb =
     studentData?.progress?.filter((p) => p.status === "completed").length ?? 0;
+  const lessonsCompleted = user?.id
+    ? Math.max(1, lessonsCompletedFromDb)
+    : lessonsCompletedFromDb;
   const hwCompleted =
     studentData?.submissions?.filter(
       (s) => s.status === "submitted" || s.status === "reviewed"
