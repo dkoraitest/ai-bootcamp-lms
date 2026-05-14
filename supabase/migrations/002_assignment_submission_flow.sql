@@ -4,6 +4,13 @@ alter table assignment_submissions
   add column if not exists feedback text,
   add column if not exists points_earned int;
 
+alter table assignment_submissions
+  drop constraint if exists assignment_submissions_user_id_fkey;
+
+alter table assignment_submissions
+  add constraint assignment_submissions_user_id_fkey
+  foreign key (user_id) references auth.users(id) on delete cascade;
+
 do $$
 begin
   if exists (
