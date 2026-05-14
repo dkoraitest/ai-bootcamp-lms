@@ -11,6 +11,7 @@ type Props = {
   lessonsTotal: number;
   nextLessonNumber: number;
   nextLessonTopic: string;
+  href?: string;
 };
 
 function getBannerText(props: Props): string {
@@ -41,9 +42,11 @@ function getBannerText(props: Props): string {
 
 export default function NextStepBanner(props: Props) {
   const text = getBannerText(props);
+  const className =
+    "col-span-1 lg:col-span-3 bg-[#2563eb] hover:bg-[#1d4ed8] transition-colors rounded-[8px] px-6 py-5 flex items-center justify-between cursor-pointer";
 
-  return (
-    <div className="col-span-1 lg:col-span-3 bg-[#2563eb] rounded-[8px] px-6 py-5 flex items-center justify-between cursor-pointer">
+  const content = (
+    <>
       <div className="flex items-center gap-4">
         <Zap className="text-white opacity-80 shrink-0" size={22} />
         <div>
@@ -52,6 +55,21 @@ export default function NextStepBanner(props: Props) {
         </div>
       </div>
       <ChevronRight className="text-white shrink-0 animate-pulse" size={24} />
-    </div>
+    </>
   );
+
+  if (props.href) {
+    return (
+      <a
+        href={props.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
 }
