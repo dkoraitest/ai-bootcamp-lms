@@ -37,7 +37,7 @@ function getBannerText(props: Props): string {
   if (lessonsCompleted < lessonsTotal && lessonToday) {
     return `Сегодня урок ${nextLessonNumber}: ${nextLessonTopic}`;
   }
-  return `Посмотри запись Урока ${lessonsCompleted + 1}`;
+  return `Посмотри запись Урока ${Math.max(1, lessonsCompleted)}`;
 }
 
 export default function NextStepBanner(props: Props) {
