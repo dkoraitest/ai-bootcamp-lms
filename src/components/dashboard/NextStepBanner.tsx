@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ChevronRight, Zap } from "lucide-react";
 
 type Props = {
@@ -39,11 +40,30 @@ function getBannerText(props: Props): string {
   return `Посмотри запись Урока ${lessonsCompleted + 1}`;
 }
 
+function getBannerHref(props: Props): string {
+  const { hwCompleted, hwTotal, daysLeft, peerReviewOpen, lessonToday, lessonsCompleted, lessonsTotal } = props;
+
+  if (hwCompleted < hwTotal && daysLeft <= 2) {
+    return "/assignments";
+  }
+  if (peerReviewOpen) {
+    return "/peer-review";
+  }
+  if (lessonsCompleted < lessonsTotal && lessonToday) {
+    return "/program";
+  }
+  return "/program";
+}
+
 export default function NextStepBanner(props: Props) {
   const text = getBannerText(props);
+  const href = getBannerHref(props);
 
   return (
-    <div className="col-span-1 lg:col-span-3 bg-[#2563eb] rounded-[8px] px-6 py-5 flex items-center justify-between cursor-pointer">
+    <Link
+      href={href}
+      className="col-span-1 lg:col-span-3 bg-[#2563eb] rounded-[8px] px-6 py-5 flex items-center justify-between cursor-pointer hover:bg-[#1d4ed8] transition-colors"
+    >
       <div className="flex items-center gap-4">
         <Zap className="text-white opacity-80 shrink-0" size={22} />
         <div>
@@ -52,6 +72,6 @@ export default function NextStepBanner(props: Props) {
         </div>
       </div>
       <ChevronRight className="text-white shrink-0 animate-pulse" size={24} />
-    </div>
+    </Link>
   );
 }

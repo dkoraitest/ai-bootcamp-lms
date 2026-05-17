@@ -397,7 +397,7 @@ export default function AssignmentPageCard({
                         rel="noreferrer"
                         className="text-sm text-[#2563eb] hover:underline"
                       >
-                        GitHub: {assignment.githubUrl}
+                        Ссылка: {assignment.githubUrl}
                       </a>
                     )}
                     {assignment.liveUrl && (
@@ -438,13 +438,13 @@ export default function AssignmentPageCard({
                     assignment.hwNumber === 5) && (
                     <div>
                       <label className="mb-1 block text-xs font-medium text-zinc-700">
-                        GitHub ссылка *
+                        Ссылка *
                       </label>
                       <input
                         type="url"
                         value={githubUrl}
                         onChange={(event) => setGithubUrl(event.target.value)}
-                        placeholder="https://github.com/..."
+                        placeholder="https://..."
                         className="w-full rounded-[4px] border border-[#e4e4e7] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2563eb]"
                       />
                     </div>
