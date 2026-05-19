@@ -162,7 +162,7 @@ begin
   return query
   select
     s.id,
-    s.assignment_id,
+    a.hw_number,
     coalesce(u.raw_user_meta_data ->> 'name', split_part(u.email, '@', 1)) as student_name,
     u.email as student_email,
     s.github_url,
@@ -172,8 +172,9 @@ begin
     s.status,
     s.submitted_at
   from assignment_submissions s
+  join assignments a on a.id = s.assignment_id
   join auth.users u on u.id = s.user_id
   where s.status in ('submitted', 'reviewed')
-  order by s.submitted_at desc nulls last, s.assignment_id asc;
+  order by s.submitted_at desc nulls last, a.hw_number asc;
 end;
 $$ language plpgsql security definer set search_path = public, auth;

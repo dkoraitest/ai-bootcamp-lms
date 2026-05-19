@@ -8,7 +8,9 @@ import AssignmentPageCard, {
   AssignmentSubmitPayload,
   AssignmentSubmitResult,
 } from "@/components/assignments/AssignmentPageCard";
-import AssignmentNotificationsPanel from "@/components/assignments/AssignmentNotificationsPanel";
+import AssignmentNotificationsPanel, {
+  AssignmentNotification,
+} from "@/components/assignments/AssignmentNotificationsPanel";
 import AdminSubmissionQueue from "@/components/assignments/AdminSubmissionQueue";
 import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
@@ -41,6 +43,8 @@ type AdminSubmissionRow = {
   artifact: string | null;
   status: string;
   submitted_at: string | null;
+  feedback: string | null;
+  points_earned: number | null;
 };
 
 const INITIAL_ASSIGNMENTS: AssignmentData[] = [
@@ -266,12 +270,21 @@ function mergeAssignmentsWithSubmissions(
 function buildStudentNotice(
   assignment: AssignmentData,
   submittedAt: string
-): NotificationRow {
+): AssignmentNotification {
   return {
     id: `local-${assignment.hwNumber}-${submittedAt}`,
     title: `ДЗ ${assignment.hwNumber} отправлено`,
     body: `Вы сдали "${assignment.title}". Ссылки уже появились в панели администратора.`,
-    created_at: submittedAt,
+    createdAt: submittedAt,
+  };
+}
+
+function mapNotificationRow(row: NotificationRow): AssignmentNotification {
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    createdAt: row.created_at,
   };
 }
 
@@ -282,7 +295,7 @@ export default function AssignmentsPage() {
 
   const [filter, setFilter] = useState<FilterKey>("all");
   const [assignments, setAssignments] = useState<AssignmentData[]>(INITIAL_ASSIGNMENTS);
-  const [notifications, setNotifications] = useState<NotificationRow[]>([]);
+  const [notifications, setNotifications] = useState<AssignmentNotification[]>([]);
   const [adminSubmissions, setAdminSubmissions] = useState<AdminSubmissionRow[]>([]);
   const [panelError, setPanelError] = useState("");
   const [loadingPanel, setLoadingPanel] = useState(false);
@@ -307,7 +320,7 @@ export default function AssignmentsPage() {
         if (isCancelled) return;
 
         if (error) {
-          setPanelError("Не удалось загрузить сданные ДЗ для панели проверки.");
+          setPanelError(`Ошибка: ${error.message}`);
         } else {
           setAdminSubmissions((data ?? []) as AdminSubmissionRow[]);
         }
@@ -340,7 +353,7 @@ export default function AssignmentsPage() {
           current || "Не удалось загрузить сообщения по домашним заданиям."
         );
       } else {
-        setNotifications((messageData ?? []) as NotificationRow[]);
+        setNotifications(((messageData ?? []) as NotificationRow[]).map(mapNotificationRow));
       }
 
       setLoadingPanel(false);
@@ -450,6 +463,8 @@ export default function AssignmentsPage() {
         artifact: submission.artifact,
         status: submission.status,
         submittedAt: submission.submitted_at,
+        feedback: submission.feedback,
+        pointsEarned: submission.points_earned,
       })),
     [adminSubmissions]
   );
