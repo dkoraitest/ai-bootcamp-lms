@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ChevronRight, Zap } from "lucide-react";
 
 type Props = {
@@ -41,20 +40,6 @@ function getBannerText(props: Props): string {
   return `Посмотри запись Урока ${Math.max(1, lessonsCompleted)}`;
 }
 
-function getBannerHref(props: Props): string {
-  const { hwCompleted, hwTotal, daysLeft, peerReviewOpen, lessonToday, lessonsCompleted, lessonsTotal } = props;
-
-  if (hwCompleted < hwTotal && daysLeft <= 2) {
-    return "/assignments";
-  }
-  if (peerReviewOpen) {
-    return "/peer-review";
-  }
-  if (lessonsCompleted < lessonsTotal && lessonToday) {
-    return "/program";
-  }
-  return "/program";
-}
 
 export default function NextStepBanner(props: Props) {
   const text = getBannerText(props);
