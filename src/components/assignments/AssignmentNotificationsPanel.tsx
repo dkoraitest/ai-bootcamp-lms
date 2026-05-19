@@ -1,6 +1,6 @@
 "use client";
 
-type AssignmentNotification = {
+export type AssignmentNotification = {
   id: string;
   title: string;
   body: string;
