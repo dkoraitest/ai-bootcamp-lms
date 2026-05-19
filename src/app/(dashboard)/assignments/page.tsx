@@ -490,14 +490,7 @@ export default function AssignmentsPage() {
         {isReviewer ? (
           <AdminSubmissionQueue submissions={queueSubmissions} loading={loadingPanel} />
         ) : (
-          <AssignmentNotificationsPanel
-            notifications={notifications.map((n) => ({
-              id: n.id,
-              title: n.title,
-              body: n.body,
-              createdAt: n.created_at,
-            }))}
-          />
+          <AssignmentNotificationsPanel notifications={notifications} />
         )}
 
         {panelError && (
