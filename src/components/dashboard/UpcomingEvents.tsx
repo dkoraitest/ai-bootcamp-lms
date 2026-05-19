@@ -22,7 +22,7 @@ export default function UpcomingEvents({ nextLesson, nextDeadline }: Props) {
     nextDeadline.daysLeft <= 3 ? "text-[#d97706]" : "text-[#71717a]";
 
   return (
-    <div className="col-span-1 bg-white rounded-[8px] border border-[#e4e4e7] shadow-sm p-6 flex flex-col gap-4">
+    <div className="col-span-1 bg-white rounded-[8px] border border-[#e4e4e7] border-l-4 border-l-[#4f46e5] shadow-sm p-6 flex flex-col gap-4">
       <h2 className="font-semibold text-[#18181b]">Ближайшее</h2>
 
       <div className="flex flex-col gap-1">

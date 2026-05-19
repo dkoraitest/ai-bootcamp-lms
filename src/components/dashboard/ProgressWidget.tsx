@@ -39,13 +39,13 @@ export default function ProgressWidget({
   hwTotal,
 }: Props) {
   return (
-    <div className="col-span-1 lg:col-span-2 bg-white rounded-[8px] border border-[#e4e4e7] shadow-sm p-6 space-y-5">
+    <div className="col-span-1 lg:col-span-2 bg-white rounded-[8px] border border-[#e4e4e7] border-l-4 border-l-[#16a34a] shadow-sm p-6 space-y-5">
       <h2 className="font-semibold text-[#18181b]">Мой прогресс</h2>
       <ProgressBar
         label="Уроков пройдено"
         value={lessonsCompleted}
         total={lessonsTotal}
-        color="#2563eb"
+        color="#4f46e5"
       />
       <ProgressBar
         label="Домашних заданий"

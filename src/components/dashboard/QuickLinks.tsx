@@ -9,7 +9,7 @@ const LINKS = [
 
 export default function QuickLinks() {
   return (
-    <div className="col-span-1 bg-white rounded-[8px] border border-[#e4e4e7] shadow-sm p-6 flex flex-col gap-1">
+    <div className="col-span-1 bg-[#fafafa] rounded-[8px] border border-[#e4e4e7] shadow-sm p-6 flex flex-col gap-1">
       <h2 className="font-semibold text-[#18181b] mb-2">Быстрые ссылки</h2>
       <div className="flex flex-col">
         {LINKS.map((link, i) => (

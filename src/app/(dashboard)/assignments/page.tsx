@@ -389,9 +389,10 @@ export default function AssignmentsPage() {
     });
 
     if (error) {
+      console.error("submit_student_assignment failed", error);
       return {
         ok: false,
-        error: "Не удалось отправить ДЗ. Проверь ссылки и попробуй ещё раз.",
+        error: `Не удалось отправить ДЗ: ${error.message}`,
       };
     }
 
@@ -489,7 +490,14 @@ export default function AssignmentsPage() {
         {isReviewer ? (
           <AdminSubmissionQueue submissions={queueSubmissions} loading={loadingPanel} />
         ) : (
-          <AssignmentNotificationsPanel notifications={notifications} />
+          <AssignmentNotificationsPanel
+            notifications={notifications.map((n) => ({
+              id: n.id,
+              title: n.title,
+              body: n.body,
+              createdAt: n.created_at,
+            }))}
+          />
         )}
 
         {panelError && (

@@ -32,10 +32,10 @@ export default function Sidebar({ userName }: Props) {
 
   return (
     <aside className="hidden md:flex flex-col w-64 shrink-0 bg-white border-r border-[#e4e4e7] h-screen sticky top-0">
-      <div className="px-6 py-5 border-b border-[#e4e4e7]">
-        <span className="font-semibold text-[#18181b] text-base">AI Agents Bootcamp</span>
+      <div className="px-6 py-5 border-b border-[#e4e4e7] bg-gradient-to-r from-[#4f46e5] to-[#6366f1]">
+        <span className="font-semibold text-white text-base">AI Agents Bootcamp</span>
         {userName && (
-          <p className="text-xs text-zinc-500 mt-0.5 truncate">{userName}</p>
+          <p className="text-xs text-indigo-200 mt-0.5 truncate">{userName}</p>
         )}
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -52,7 +52,7 @@ export default function Sidebar({ userName }: Props) {
               }`}
             >
               {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#2563eb] rounded-full" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#4f46e5] rounded-full" />
               )}
               <span className="text-base leading-none">{item.emoji}</span>
               <span>{item.label}</span>

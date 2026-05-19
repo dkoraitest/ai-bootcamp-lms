@@ -1,9 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import ProgramProgressBar from "@/components/program/ProgramProgressBar";
 import WeekBlock from "@/components/program/WeekBlock";
 import { type AssignmentData } from "@/components/program/AssignmentCard";
 import { useLessonUrls } from "@/lib/hooks/useContentUrls";
+import { useUser } from "@/lib/hooks/useUser";
+import { createClient } from "@/lib/supabase/client";
+
+type SubmissionRow = {
+  assignment_id: number;
+  status: AssignmentData["status"];
+  github_url: string | null;
+  video_url: string | null;
+};
 
 const LESSONS = [
   { id: 1,  week: 1, date: "12.05.2026", topic: "AI Mindset: новая работа в эпоху агентов",             hasHw: false,                status: "locked" as const, videoUrl: "#" },
@@ -62,7 +72,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
       { level: "Хороший",  description: "Задача реальная из вашей работы, есть описание зачем" },
       { level: "Отличный", description: "Измеримый результат, экономия времени указана" },
     ],
-    status: "submitted",
+    status: "not_started",
     githubUrl: "",
     videoUrl: "",
   },
@@ -166,6 +176,47 @@ const WEEKS = [1, 2, 3, 4, 5, 6];
 
 export default function ProgramPage() {
   const lessonUrls = useLessonUrls();
+  const { user } = useUser();
+  const [submissionsByHw, setSubmissionsByHw] = useState<
+    Record<number, SubmissionRow>
+  >({});
+
+  useEffect(() => {
+    if (!user?.id) {
+      setSubmissionsByHw({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc("get_my_assignment_submissions");
+      if (cancelled || error || !data) return;
+      const map: Record<number, SubmissionRow> = {};
+      for (const row of data as SubmissionRow[]) {
+        map[row.assignment_id] = row;
+      }
+      setSubmissionsByHw(map);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  const assignments: Record<number, AssignmentData> = Object.fromEntries(
+    Object.entries(ASSIGNMENTS).map(([lessonId, a]) => {
+      const sub = submissionsByHw[a.hwNumber];
+      if (!sub) return [lessonId, a];
+      return [
+        lessonId,
+        {
+          ...a,
+          status: sub.status,
+          githubUrl: sub.github_url ?? a.githubUrl,
+          videoUrl: sub.video_url ?? a.videoUrl,
+        },
+      ];
+    })
+  );
 
   const lessons = LESSONS.map((l) => ({
     ...l,
@@ -193,7 +244,7 @@ export default function ProgramPage() {
             theme={WEEK_THEMES[week]}
             lessons={lessons.filter((l) => l.week === week)}
             techniques={TECHNIQUES}
-            assignments={ASSIGNMENTS}
+            assignments={assignments}
             defaultOpen={week === 1}
           />
         ))}
