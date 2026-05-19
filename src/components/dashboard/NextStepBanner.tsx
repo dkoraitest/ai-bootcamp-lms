@@ -37,6 +37,9 @@ function getBannerText(props: Props): string {
   if (lessonsCompleted < lessonsTotal && lessonToday) {
     return `Сегодня урок ${nextLessonNumber}: ${nextLessonTopic}`;
   }
+  if (props.href) {
+    return "Посмотреть запись урока 3";
+  }
   return `Посмотри запись Урока ${Math.max(1, lessonsCompleted)}`;
 }
 

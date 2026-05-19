@@ -138,7 +138,7 @@ export default function HomePage() {
           lessonsTotal={12}
           nextLessonNumber={nextLesson.number}
           nextLessonTopic={nextLesson.topic}
-          href={lesson1Url || undefined}
+          href="https://drive.google.com/file/d/12Uz2DekbO7ip_EuJKF5K-VJnP2KQI1me/view?usp=drive_link"
         />
 
         {loading ? (
