@@ -3,6 +3,7 @@
 import NextStepBanner from "@/components/dashboard/NextStepBanner";
 import ProgressWidget from "@/components/dashboard/ProgressWidget";
 import GamificationWidget from "@/components/dashboard/GamificationWidget";
+import WeeklyGoalCard from "@/components/dashboard/WeeklyGoalCard";
 import UpcomingEvents from "@/components/dashboard/UpcomingEvents";
 import QuickLinks from "@/components/dashboard/QuickLinks";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -148,6 +149,8 @@ export default function HomePage() {
             />
           </>
         )}
+
+        <WeeklyGoalCard goal={studentData?.goal ?? null} />
 
         <UpcomingEvents
           nextLesson={nextLesson}

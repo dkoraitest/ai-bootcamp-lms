@@ -30,6 +30,7 @@ export type StudentData = {
   submissions: Submission[] | null;
   launches: Launch[] | null;
   gamification: Gamification | null;
+  goal: string | null;
 };
 
 export function useStudentData(userId: string | undefined) {
@@ -50,11 +51,13 @@ export function useStudentData(userId: string | undefined) {
         { data: submissions },
         { data: launches },
         { data: gamification },
+        { data: userData },
       ] = await Promise.all([
         supabase.from("student_progress").select("*").eq("user_id", userId),
         supabase.from("assignment_submissions").select("*").eq("user_id", userId),
         supabase.from("agent_launches").select("*").eq("user_id", userId),
         supabase.from("gamification").select("*").eq("user_id", userId).single(),
+        supabase.from("users").select("goal").eq("id", userId).single(),
       ]);
 
       setData({
@@ -62,6 +65,7 @@ export function useStudentData(userId: string | undefined) {
         submissions: submissions as Submission[] | null,
         launches: launches as Launch[] | null,
         gamification: gamification as Gamification | null,
+        goal: (userData as { goal: string | null } | null)?.goal ?? null,
       });
       setLoading(false);
     }
