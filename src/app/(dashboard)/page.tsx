@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import NextStepBanner from "@/components/dashboard/NextStepBanner";
 import ProgressWidget from "@/components/dashboard/ProgressWidget";
 import GamificationWidget from "@/components/dashboard/GamificationWidget";
@@ -9,7 +8,6 @@ import QuickLinks from "@/components/dashboard/QuickLinks";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useUser } from "@/lib/hooks/useUser";
 import { useStudentData } from "@/lib/hooks/useStudentData";
-import { createClient } from "@/lib/supabase/client";
 
 const BOOTCAMP_START = new Date("2026-05-12");
 
@@ -40,20 +38,6 @@ const DEADLINES_SCHEDULE = [
 export default function HomePage() {
   const { user } = useUser();
   const { data: studentData, loading } = useStudentData(user?.id);
-  const [lesson1Url, setLesson1Url] = useState<string>("");
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("materials")
-      .select("url")
-      .eq("id", 1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.url) setLesson1Url(data.url as string);
-      });
-  }, []);
-
   const userName = (user?.user_metadata?.name as string | undefined) ?? "Студент";
 
   const lessonsCompletedFromDb =
