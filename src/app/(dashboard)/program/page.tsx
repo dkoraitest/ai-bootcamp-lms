@@ -15,6 +15,13 @@ type SubmissionRow = {
   video_url: string | null;
 };
 
+type LessonStatus = "completed" | "watching" | "locked";
+
+type ProgressRow = {
+  lesson_id: number;
+  status: LessonStatus;
+};
+
 const LESSONS = [
   { id: 1,  week: 1, date: "12.05.2026", topic: "AI Mindset: новая работа в эпоху агентов",             hasHw: false,                status: "locked" as const, videoUrl: "#" },
   { id: 2,  week: 1, date: "14.05.2026", topic: "Переход в Cowork: AI который делает",                   hasHw: true,  hwNumber: 1,  status: "locked" as const, videoUrl: "#" },
@@ -180,27 +187,70 @@ export default function ProgramPage() {
   const [submissionsByHw, setSubmissionsByHw] = useState<
     Record<number, SubmissionRow>
   >({});
+  const [progressByLesson, setProgressByLesson] = useState<Record<number, LessonStatus>>({});
 
   useEffect(() => {
     if (!user?.id) {
       setSubmissionsByHw({});
+      setProgressByLesson({});
       return;
     }
     let cancelled = false;
+    const supabase = createClient();
+
     (async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase.rpc("get_my_assignment_submissions");
-      if (cancelled || error || !data) return;
-      const map: Record<number, SubmissionRow> = {};
-      for (const row of data as SubmissionRow[]) {
-        map[row.assignment_id] = row;
+      const [{ data: subData, error: subError }, { data: progData }] = await Promise.all([
+        supabase.rpc("get_my_assignment_submissions"),
+        supabase.from("student_progress").select("lesson_id, status").eq("user_id", user.id),
+      ]);
+
+      if (cancelled) return;
+
+      if (!subError && subData) {
+        const map: Record<number, SubmissionRow> = {};
+        for (const row of subData as SubmissionRow[]) {
+          map[row.assignment_id] = row;
+        }
+        setSubmissionsByHw(map);
       }
-      setSubmissionsByHw(map);
+
+      if (progData) {
+        const map: Record<number, LessonStatus> = {};
+        for (const row of progData as ProgressRow[]) {
+          map[row.lesson_id] = row.status;
+        }
+        setProgressByLesson(map);
+      }
     })();
+
     return () => {
       cancelled = true;
     };
   }, [user?.id]);
+
+  async function handleStatusChange(lessonId: number, status: LessonStatus) {
+    if (!user?.id) return;
+    const supabase = createClient();
+
+    setProgressByLesson((prev) => ({ ...prev, [lessonId]: status }));
+
+    if (status === "locked") {
+      await supabase
+        .from("student_progress")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("lesson_id", lessonId);
+      setProgressByLesson((prev) => {
+        const next = { ...prev };
+        delete next[lessonId];
+        return next;
+      });
+    } else {
+      await supabase
+        .from("student_progress")
+        .upsert({ user_id: user.id, lesson_id: lessonId, status }, { onConflict: "user_id,lesson_id" });
+    }
+  }
 
   const assignments: Record<number, AssignmentData> = Object.fromEntries(
     Object.entries(ASSIGNMENTS).map(([lessonId, a]) => {
@@ -218,12 +268,27 @@ export default function ProgramPage() {
     })
   );
 
-  const lessons = LESSONS.map((l) => ({
-    ...l,
-    videoUrl: lessonUrls[l.id] ?? "",
-  }));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const completedCount = lessons.filter((l) => (l.status as string) === "completed").length;
+  const lessons = LESSONS.map((l) => {
+    const [day, month, year] = l.date.split(".").map(Number);
+    const lessonDate = new Date(year, month - 1, day);
+    const isReleased = lessonDate <= today;
+
+    let status: LessonStatus;
+    if (progressByLesson[l.id] !== undefined) {
+      status = progressByLesson[l.id];
+    } else if (isReleased) {
+      status = "watching";
+    } else {
+      status = "locked";
+    }
+
+    return { ...l, videoUrl: lessonUrls[l.id] ?? "", status };
+  });
+
+  const completedCount = lessons.filter((l) => l.status === "completed").length;
 
   return (
     <div>
@@ -246,6 +311,7 @@ export default function ProgramPage() {
             techniques={TECHNIQUES}
             assignments={assignments}
             defaultOpen={week === 1}
+            onStatusChange={handleStatusChange}
           />
         ))}
       </div>

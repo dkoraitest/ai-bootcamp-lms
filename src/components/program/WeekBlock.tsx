@@ -27,6 +27,7 @@ type Props = {
   techniques: Record<number, string[]>;
   assignments: Record<number, AssignmentData>;
   defaultOpen?: boolean;
+  onStatusChange?: (lessonId: number, status: LessonStatus) => void;
 };
 
 function getWeekBadge(lessons: LessonData[]): string {
@@ -42,6 +43,7 @@ export default function WeekBlock({
   techniques,
   assignments,
   defaultOpen = false,
+  onStatusChange,
 }: Props) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const badge = getWeekBadge(lessons);
@@ -91,6 +93,7 @@ export default function WeekBlock({
                 <LessonCard
                   lesson={lesson}
                   techniques={techniques[lesson.id] ?? []}
+                  onStatusChange={onStatusChange ? (s) => onStatusChange(lesson.id, s) : undefined}
                 />
               )}
 

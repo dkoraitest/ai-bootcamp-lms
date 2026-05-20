@@ -13,6 +13,7 @@ type LessonData = {
 type Props = {
   lesson: LessonData;
   techniques: string[];
+  onStatusChange?: (status: LessonStatus) => void;
 };
 
 const STATUS_CONFIG: Record<LessonStatus, { label: string; emoji: string; classes: string }> = {
@@ -21,7 +22,7 @@ const STATUS_CONFIG: Record<LessonStatus, { label: string; emoji: string; classe
   locked:    { label: "Скоро",       emoji: "🔒", classes: "bg-zinc-100 text-zinc-400" },
 };
 
-export default function LessonCard({ lesson, techniques }: Props) {
+export default function LessonCard({ lesson, techniques, onStatusChange }: Props) {
   const cfg = STATUS_CONFIG[lesson.status];
   const visibleTechs = techniques.slice(0, 3);
   const remaining = techniques.length - 3;
@@ -76,26 +77,34 @@ export default function LessonCard({ lesson, techniques }: Props) {
         </div>
       </div>
 
-      {/* Status change buttons — only when watching */}
-      {lesson.status === "watching" && (
+      {/* Status change buttons — only when not locked */}
+      {lesson.status !== "locked" && onStatusChange && (
         <div className="flex gap-2 mt-3 pt-3 border-t border-zinc-200">
           <button
-            onClick={() => console.log("status change")}
-            className="text-xs px-3 py-1.5 rounded bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition-colors"
+            onClick={() => onStatusChange("locked")}
+            className="text-xs px-3 py-1.5 rounded transition-colors bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
           >
             Не начат
           </button>
           <button
-            onClick={() => console.log("status change")}
-            className="text-xs px-3 py-1.5 rounded bg-blue-100 text-blue-700 ring-1 ring-blue-400"
+            onClick={() => onStatusChange("watching")}
+            className={`text-xs px-3 py-1.5 rounded transition-colors ${
+              lesson.status === "watching"
+                ? "bg-blue-100 text-blue-700 ring-1 ring-blue-400"
+                : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
+            }`}
           >
             Смотрю
           </button>
           <button
-            onClick={() => console.log("status change")}
-            className="text-xs px-3 py-1.5 rounded bg-zinc-100 text-zinc-500 hover:bg-zinc-200 transition-colors"
+            onClick={() => onStatusChange("completed")}
+            className={`text-xs px-3 py-1.5 rounded transition-colors ${
+              lesson.status === "completed"
+                ? "bg-green-100 text-green-700 ring-1 ring-green-400"
+                : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
+            }`}
           >
-            Просмотрен
+            Просмотрен ✓
           </button>
         </div>
       )}
