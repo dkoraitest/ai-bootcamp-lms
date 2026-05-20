@@ -1,12 +1,45 @@
 -- ============================================================
--- BADGE TRIGGERS
+-- BADGE TRIGGERS + POINTS
 -- Run once in Supabase SQL Editor → Database → SQL Editor
+-- Points per badge: 1→20, 2→40, 3→30, 4→50, 5→50, 6→30,
+--                  7→60, 8→60, 9→80, 10→60, 11→40, 12→100
+-- Points per lesson completed: +10
 -- ============================================================
 
--- Helper: award a badge if not already earned
-create or replace function award_badge(p_user_id uuid, p_badge_id int)
+-- Helper: add points to gamification
+create or replace function increment_points(p_user_id uuid, p_points int)
 returns void as $$
 begin
+  insert into gamification (user_id, points, level, badges, quests)
+  values (p_user_id, p_points, 1, '[]', '[]')
+  on conflict (user_id)
+  do update set points = gamification.points + p_points;
+end;
+$$ language plpgsql security definer;
+
+
+-- Helper: award a badge if not already earned + add badge points
+create or replace function award_badge(p_user_id uuid, p_badge_id int)
+returns void as $$
+declare
+  v_points int;
+begin
+  v_points := case p_badge_id
+    when 1  then 20
+    when 2  then 40
+    when 3  then 30
+    when 4  then 50
+    when 5  then 50
+    when 6  then 30
+    when 7  then 60
+    when 8  then 60
+    when 9  then 80
+    when 10 then 60
+    when 11 then 40
+    when 12 then 100
+    else 0
+  end;
+
   update gamification
   set badges = badges || jsonb_build_array(
     jsonb_build_object(
@@ -19,20 +52,38 @@ begin
       select 1 from jsonb_array_elements(badges) as b
       where (b->>'id')::int = p_badge_id
     );
+
+  -- Only award points if badge was newly added (FOUND = true)
+  if found and v_points > 0 then
+    perform increment_points(p_user_id, v_points);
+  end if;
 end;
 $$ language plpgsql security definer;
 
 
 -- ============================================================
--- TRIGGER 1: student_progress → "Первый старт"
+-- TRIGGER 1: student_progress → +10 очков + "Первый старт"
 -- ============================================================
 create or replace function trigger_badge_on_progress()
 returns trigger as $$
 begin
-  -- 🚀 Первый старт — урок 1 просмотрен
-  if NEW.lesson_id = 1 and NEW.status = 'completed' then
-    perform award_badge(NEW.user_id, 1);
+  -- +10 очков за любой завершённый урок (только при первом завершении)
+  if NEW.status = 'completed' and coalesce(OLD.status, '') != 'completed' then
+    perform increment_points(NEW.user_id, 10);
   end if;
+
+  -- 🚀 Первый старт — урок 1 недели 1 завершён
+  if NEW.status = 'completed' then
+    if exists (
+      select 1 from lessons
+      where id = NEW.lesson_id
+        and week = 1
+        and lesson_number = 1
+    ) then
+      perform award_badge(NEW.user_id, 1);
+    end if;
+  end if;
+
   return NEW;
 end;
 $$ language plpgsql security definer;
