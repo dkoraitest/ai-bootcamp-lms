@@ -88,7 +88,7 @@ export default function ProgressPage() {
     ).length ?? 0;
 
   const points = studentData?.gamification?.points ?? 0;
-  const level = studentData?.gamification?.level ?? 1;
+  const level = points >= 1001 ? 5 : points >= 601 ? 4 : points >= 301 ? 3 : points >= 101 ? 2 : 1;
   const levelName = LEVEL_NAMES[level] ?? "Новичок";
   const pointsToNextLevel = LEVEL_THRESHOLDS[level] ?? 101;
   const nextLevelName = NEXT_LEVEL_NAMES[level] ?? "Практик";
