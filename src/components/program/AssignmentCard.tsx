@@ -173,7 +173,7 @@ export default function AssignmentCard({ assignment }: Props) {
                       rel="noopener noreferrer"
                       className="text-sm text-[#2563eb] underline"
                     >
-                      GitHub репозиторий
+                      Ссылка на работу
                     </a>
                   )}
                   {assignment.videoUrl && (
@@ -191,11 +191,11 @@ export default function AssignmentCard({ assignment }: Props) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-zinc-700 mb-1">
-                      Ссылка на GitHub
+                      Ссылка на работу
                     </label>
                     <input
                       type="url"
-                      placeholder="https://github.com/..."
+                      placeholder="https://..."
                       className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2563eb]"
                     />
                   </div>

@@ -113,7 +113,7 @@ function SubmissionCard({ submission }: { submission: AdminSubmission }) {
             rel="noreferrer"
             className="text-sm text-[#2563eb] hover:underline"
           >
-            GitHub: {submission.githubUrl}
+            Ссылка: {submission.githubUrl}
           </a>
         )}
         {submission.liveUrl && (
