@@ -38,7 +38,7 @@ function getBannerText(props: Props): string {
     return `Сегодня урок ${nextLessonNumber}: ${nextLessonTopic}`;
   }
   if (props.href) {
-    return "Посмотреть запись урока 5";
+    return "Посмотреть запись урока 6";
   }
   return `Посмотри запись Урока ${Math.max(1, lessonsCompleted)}`;
 }
