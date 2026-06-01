@@ -184,7 +184,7 @@ export default function ProgressPage() {
 
         {/* ── Full-width bottom ── */}
         <div className="lg:col-span-3">
-          <GoalCard streakWeeks={0} targetWeeks={4} />
+          <GoalCard />
         </div>
       </div>
     </div>
