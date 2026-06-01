@@ -1,8 +1,8 @@
 "use client";
 
 import StatsGrid from "@/components/progress/StatsGrid";
-import ActivityChart from "@/components/progress/ActivityChart";
-import DailyActivityGrid from "@/components/progress/DailyActivityGrid";
+// import ActivityChart from "@/components/progress/ActivityChart";
+// import DailyActivityGrid from "@/components/progress/DailyActivityGrid";
 import PointsHistory from "@/components/progress/PointsHistory";
 import MyCaseCard from "@/components/progress/MyCaseCard";
 import LevelCard from "@/components/progress/LevelCard";
@@ -49,18 +49,18 @@ const DEFAULT_QUESTS = [
   { id: 4, name: "Агент 5/5",     emoji: "🔥", description: "5 запусков агента за одну неделю",            progress: 0, total: 5, completed: false },
 ];
 
-const MOCK_WEEKLY_LAUNCHES = [
-  { week: "29 апр", launches: 0 },
-  { week: "6 мая",  launches: 0 },
-  { week: "12 мая", launches: 0 },
-  { week: "19 мая", launches: 0 },
-  { week: "26 мая", launches: 0 },
-  { week: "2 июн",  launches: 0 },
-  { week: "9 июн",  launches: 0 },
-  { week: "16 июн", launches: 0 },
-];
-
-const MOCK_DAILY_ACTIVITY = Array(31).fill(false);
+// Моки для скрытого блока «Активность запусков» — раскомментировать вместе с блоком
+// const MOCK_WEEKLY_LAUNCHES = [
+//   { week: "29 апр", launches: 0 },
+//   { week: "6 мая",  launches: 0 },
+//   { week: "12 мая", launches: 0 },
+//   { week: "19 мая", launches: 0 },
+//   { week: "26 мая", launches: 0 },
+//   { week: "2 июн",  launches: 0 },
+//   { week: "9 июн",  launches: 0 },
+//   { week: "16 июн", launches: 0 },
+// ];
+// const MOCK_DAILY_ACTIVITY = Array(31).fill(false);
 const MOCK_POINTS_HISTORY: { action: string; points: number; date: string }[] = [];
 
 export default function ProgressPage() {
@@ -143,11 +143,13 @@ export default function ProgressPage() {
             />
           )}
 
+          {/* Блок «Активность запусков» скрыт по запросу — раскомментировать, чтобы вернуть
           <div className="bg-white rounded-[8px] border border-[#e4e4e7] shadow-sm p-6">
             <h2 className="font-semibold text-zinc-900 mb-4">Активность запусков</h2>
             <ActivityChart data={MOCK_WEEKLY_LAUNCHES} />
             <DailyActivityGrid activity={MOCK_DAILY_ACTIVITY} />
           </div>
+          */}
 
           <PointsHistory
             history={MOCK_POINTS_HISTORY}
