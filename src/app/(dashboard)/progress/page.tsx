@@ -81,13 +81,13 @@ export default function ProgressPage() {
     studentData?.submissions?.filter(
       (s) => s.status === "submitted" || s.status === "reviewed"
     ).length ?? 0;
-  const totalLaunches = studentData?.launches?.length ?? 0;
-
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const launchesThisWeek =
-    studentData?.launches?.filter(
-      (l) => new Date(l.launched_at) >= oneWeekAgo
+
+  const totalVisits = studentData?.visits?.length ?? 0;
+  const visitsThisWeek =
+    studentData?.visits?.filter(
+      (v) => new Date(v.visit_date) >= oneWeekAgo
     ).length ?? 0;
 
   const points = studentData?.gamification?.points ?? 0;
@@ -136,8 +136,8 @@ export default function ProgressPage() {
               lessonsTotal={12}
               hwCompleted={hwCompleted}
               hwTotal={6}
-              totalLaunches={totalLaunches}
-              launchesThisWeek={launchesThisWeek}
+              totalVisits={totalVisits}
+              visitsThisWeek={visitsThisWeek}
               daysInBootcamp={daysInBootcamp}
               daysTotal={BOOTCAMP_TOTAL_DAYS}
             />

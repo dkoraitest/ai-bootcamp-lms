@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import MobileNav from "@/components/layout/MobileNav";
 import TopBar from "@/components/layout/TopBar";
 import { useUser } from "@/lib/hooks/useUser";
+import { recordVisit } from "@/lib/actions/recordVisit";
 
 export default function DashboardLayout({
   children,
@@ -12,6 +14,13 @@ export default function DashboardLayout({
 }) {
   const { user } = useUser();
   const userName = user?.user_metadata?.name as string | undefined;
+
+  // Авто-отметка захода на платформу (один раз в день на пользователя)
+  useEffect(() => {
+    if (user?.id) {
+      recordVisit(user.id);
+    }
+  }, [user?.id]);
 
   return (
     <div className="flex min-h-screen bg-[#f7f7f8]">

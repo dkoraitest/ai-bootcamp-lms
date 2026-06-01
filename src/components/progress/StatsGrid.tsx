@@ -3,8 +3,8 @@ type Props = {
   lessonsTotal: number;
   hwCompleted: number;
   hwTotal: number;
-  totalLaunches: number;
-  launchesThisWeek: number;
+  totalVisits: number;
+  visitsThisWeek: number;
   daysInBootcamp: number;
   daysTotal: number;
 };
@@ -26,7 +26,7 @@ function MiniBar({ pct, color }: { pct: number; color: string }) {
 export default function StatsGrid({
   lessonsCompleted, lessonsTotal,
   hwCompleted, hwTotal,
-  totalLaunches, launchesThisWeek,
+  totalVisits, visitsThisWeek,
   daysInBootcamp, daysTotal,
 }: Props) {
   const lessonsPct = Math.round((lessonsCompleted / lessonsTotal) * 100);
@@ -50,9 +50,9 @@ export default function StatsGrid({
         </StatTile>
 
         <StatTile>
-          <p className="font-bold text-3xl text-zinc-900">{totalLaunches}</p>
-          <p className="text-sm text-zinc-500">всего запусков</p>
-          <p className="text-xs text-[#d97706] mt-2">{launchesThisWeek} на этой неделе</p>
+          <p className="font-bold text-3xl text-zinc-900">{totalVisits}</p>
+          <p className="text-sm text-zinc-500">всего заходов</p>
+          <p className="text-xs text-[#d97706] mt-2">{visitsThisWeek} на этой неделе</p>
         </StatTile>
 
         <StatTile>
