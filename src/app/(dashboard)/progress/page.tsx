@@ -4,6 +4,7 @@ import StatsGrid from "@/components/progress/StatsGrid";
 import ActivityChart from "@/components/progress/ActivityChart";
 import DailyActivityGrid from "@/components/progress/DailyActivityGrid";
 import PointsHistory from "@/components/progress/PointsHistory";
+import MyCaseCard from "@/components/progress/MyCaseCard";
 import LevelCard from "@/components/progress/LevelCard";
 import BadgesGrid from "@/components/progress/BadgesGrid";
 import QuestsCard from "@/components/progress/QuestsCard";
@@ -11,6 +12,7 @@ import GoalCard from "@/components/progress/GoalCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useUser } from "@/lib/hooks/useUser";
 import { useStudentData } from "@/lib/hooks/useStudentData";
+import { getCaseForEmail } from "@/lib/data/cases";
 
 const BOOTCAMP_START = new Date("2026-05-12");
 const BOOTCAMP_TOTAL_DAYS = 42;
@@ -64,6 +66,7 @@ const MOCK_POINTS_HISTORY: { action: string; points: number; date: string }[] = 
 export default function ProgressPage() {
   const { user } = useUser();
   const { data: studentData, loading } = useStudentData(user?.id);
+  const myCase = getCaseForEmail(user?.email);
 
   const now = new Date();
   const daysInBootcamp = Math.max(
@@ -150,6 +153,8 @@ export default function ProgressPage() {
             history={MOCK_POINTS_HISTORY}
             totalPoints={points}
           />
+
+          {myCase && <MyCaseCard data={myCase} />}
         </div>
 
         {/* ── Right column (1/3) ── */}
