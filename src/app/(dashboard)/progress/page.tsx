@@ -5,6 +5,7 @@ import StatsGrid from "@/components/progress/StatsGrid";
 // import DailyActivityGrid from "@/components/progress/DailyActivityGrid";
 import PointsHistory from "@/components/progress/PointsHistory";
 import MyCaseCard from "@/components/progress/MyCaseCard";
+import WeekGoalCard from "@/components/progress/WeekGoalCard";
 import LevelCard from "@/components/progress/LevelCard";
 import BadgesGrid from "@/components/progress/BadgesGrid";
 import QuestsCard from "@/components/progress/QuestsCard";
@@ -157,6 +158,8 @@ export default function ProgressPage() {
           />
 
           {myCase && <MyCaseCard data={myCase} />}
+
+          {myCase?.weekGoal && <WeekGoalCard goal={myCase.weekGoal} />}
         </div>
 
         {/* ── Right column (1/3) ── */}
