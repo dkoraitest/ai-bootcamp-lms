@@ -35,7 +35,7 @@ const DEFAULT_BADGES = [
   { id: 4,  name: "Vibe Coder",    emoji: "💻", description: "Задеплоил mini-app (HW2)",          earned: false, earnedAt: null },
   { id: 5,  name: "Context King",  emoji: "📄", description: "Написал CLAUDE.md (HW3)",           earned: false, earnedAt: null },
   { id: 6,  name: "Skill Builder", emoji: "🛠",  description: "Написал 2 Skills (HW3)",            earned: false, earnedAt: null },
-  { id: 7,  name: "MCP Pioneer",   emoji: "🔌", description: "Подключил MCP (HW4)",               earned: false, earnedAt: null },
+  { id: 7,  name: "Research Agent", emoji: "🔍", description: "Сдал ресёрч-агента (HW4)",          earned: false, earnedAt: null },
   { id: 8,  name: "5 в неделю",    emoji: "🔥", description: "5 запусков агента за неделю",       earned: false, earnedAt: null },
   { id: 9,  name: "На старте",     emoji: "⚡", description: "3 недели подряд без пропусков",     earned: false, earnedAt: null },
   { id: 10, name: "Domain Expert", emoji: "🎯", description: "Сдал доменный кейс (HW5)",          earned: false, earnedAt: null },
