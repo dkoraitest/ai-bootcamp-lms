@@ -4,18 +4,19 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/Skeleton";
 
-// Участники буткемпа (email -> отображаемое имя).
+// Участники буткемпа (user_id из Supabase -> отображаемое имя).
+// Баллы берутся напрямую из gamification по user_id.
 // Добавить нового участника = одна строка.
-const PARTICIPANTS: Record<string, string> = {
-  "0801@lincer.ru": "Михаил",
-  "a.golukhov@gmail.com": "Андрей",
-  "katerina.wibd@gmail.com": "Katerina",
-  "markukhin@gmail.com": "Марк",
-  "nkrasovskaya@swordfishsecurity.ru": "Наталья",
-  "panchenkoed2010@gmail.com": "Helen",
-  "pv12@inbox.ru": "Павел",
-  "s.karataeva@reksma.ru": "Света",
-};
+const PARTICIPANTS: { id: string; name: string }[] = [
+  { id: "e0551c51-3a4e-4bff-8db9-e710dcfe9941", name: "Михаил" },
+  { id: "f64508ca-d6ba-4d16-939c-886f7d0685e5", name: "Андрей" },
+  { id: "22299325-766b-4303-8a94-7f589938340b", name: "Katerina" },
+  { id: "cd8c7d42-f99b-4c89-a6ad-f607dc16838e", name: "Марк" },
+  { id: "4266c047-8fe7-4aa2-b5be-2630169488f4", name: "Наталья" },
+  { id: "7961abdc-a9d4-474c-9876-1e720303f4c5", name: "Helen" },
+  { id: "95c34fc6-0fe3-4c6b-b2f0-d133e43ab34d", name: "Павел" },
+  { id: "4d3c772b-a4df-482c-a94b-75dec45320ad", name: "Света" },
+];
 
 type Row = { name: string; points: number };
 
@@ -27,34 +28,24 @@ export default function Leaderboard() {
   useEffect(() => {
     async function load() {
       const supabase = createClient();
-      const emails = Object.keys(PARTICIPANTS);
-
-      const { data: users } = await supabase
-        .from("users")
-        .select("id, email")
-        .in("email", emails);
-
-      const idToEmail = new Map<string, string>(
-        (users ?? []).map((u) => [u.id as string, u.email as string])
-      );
 
       const { data: gamification } = await supabase
         .from("gamification")
         .select("user_id, points")
-        .in("user_id", Array.from(idToEmail.keys()));
+        .in(
+          "user_id",
+          PARTICIPANTS.map((p) => p.id)
+        );
 
-      const pointsByEmail = new Map<string, number>();
+      const pointsById = new Map<string, number>();
       for (const g of gamification ?? []) {
-        const email = idToEmail.get(g.user_id as string);
-        if (email) pointsByEmail.set(email, (g.points as number) ?? 0);
+        pointsById.set(g.user_id as string, (g.points as number) ?? 0);
       }
 
-      const result: Row[] = emails
-        .map((email) => ({
-          name: PARTICIPANTS[email],
-          points: pointsByEmail.get(email) ?? 0,
-        }))
-        .sort((a, b) => b.points - a.points);
+      const result: Row[] = PARTICIPANTS.map((p) => ({
+        name: p.name,
+        points: pointsById.get(p.id) ?? 0,
+      })).sort((a, b) => b.points - a.points);
 
       setRows(result);
     }

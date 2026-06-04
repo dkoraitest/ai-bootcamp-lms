@@ -10,9 +10,7 @@ export default function PeerReviewPage() {
         </p>
       </div>
 
-      <div className="max-w-2xl">
-        <Leaderboard />
-      </div>
+      <Leaderboard />
     </div>
   );
 }
