@@ -1,4 +1,5 @@
 import Leaderboard from "@/components/peer-review/Leaderboard";
+import PrizesCard from "@/components/peer-review/PrizesCard";
 
 export default function PeerReviewPage() {
   return (
@@ -10,6 +11,7 @@ export default function PeerReviewPage() {
         </p>
       </div>
 
+      <PrizesCard />
       <Leaderboard />
     </div>
   );
