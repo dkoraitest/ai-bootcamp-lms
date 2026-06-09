@@ -6,6 +6,7 @@ import GamificationWidget from "@/components/dashboard/GamificationWidget";
 import WeeklyGoalCard from "@/components/dashboard/WeeklyGoalCard";
 import UpcomingEvents from "@/components/dashboard/UpcomingEvents";
 import QuickLinks from "@/components/dashboard/QuickLinks";
+import BootcampGoalsCard from "@/components/dashboard/BootcampGoalsCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useUser } from "@/lib/hooks/useUser";
 import { useStudentData } from "@/lib/hooks/useStudentData";
@@ -158,6 +159,8 @@ export default function HomePage() {
         />
 
         <QuickLinks />
+
+        <BootcampGoalsCard />
       </div>
     </div>
   );
