@@ -10,6 +10,7 @@ const navItems = [
   { emoji: "✅", label: "Задания", href: "/assignments" },
   { emoji: "🧠", label: "Навыки", href: "/skills" },
   { emoji: "📊", label: "Прогресс", href: "/progress" },
+  { emoji: "⭐", label: "Оценки", href: "/projects" },
   { emoji: "👥", label: "Пир-ревью", href: "/peer-review" },
   { emoji: "🔍", label: "Поиск", href: "/search" },
 ];
