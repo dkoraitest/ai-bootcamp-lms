@@ -95,6 +95,24 @@ export default function AdminProjectsResultsPage() {
 
           {/* Results Table */}
           <VotesResultsTable />
+
+          {/* Link to Final Ratings */}
+          <div className="mt-12 pt-8 border-t border-gray-200">
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-indigo-900 mb-1">Финальный рейтинг курса</h3>
+                <p className="text-sm text-indigo-700">
+                  Общий рейтинг студентов с учётом баллов курса и оценок проектов
+                </p>
+              </div>
+              <Link
+                href="/admin/final-ratings"
+                className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all whitespace-nowrap"
+              >
+                Открыть рейтинг
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </main>
