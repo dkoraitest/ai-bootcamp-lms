@@ -107,3 +107,32 @@ begin
   where pv.voter_id = auth.uid();
 end;
 $$ language plpgsql security definer;
+
+-- RPC function to get final course ratings (for admin)
+-- Formula: final_score = current_points * 1 + sum_of_project_votes * 0.7
+create or replace function get_final_course_ratings()
+returns table (
+  user_id uuid,
+  name text,
+  email text,
+  current_points int,
+  project_votes_sum int,
+  final_score numeric
+) as $$
+begin
+  return query
+  select
+    u.id,
+    u.name,
+    u.email,
+    coalesce(g.points, 0)::int as current_points,
+    coalesce(sum(pv.score), 0)::int as project_votes_sum,
+    round((coalesce(g.points, 0)::numeric * 1) + (coalesce(sum(pv.score), 0)::numeric * 0.7), 2) as final_score
+  from users u
+  left join gamification g on u.id = g.user_id
+  left join project_votes pv on u.id = pv.votee_id
+  where u.name not in ('Дима К', 'Кира', 'Paul')
+  group by u.id, u.name, u.email, g.points
+  order by final_score desc nulls last;
+end;
+$$ language plpgsql security definer;

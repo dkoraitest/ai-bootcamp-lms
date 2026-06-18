@@ -120,3 +120,44 @@ export function useVotesResults() {
 
   return { results, loading, error };
 }
+
+interface FinalRating {
+  user_id: string;
+  name: string;
+  email: string;
+  current_points: number;
+  project_votes_sum: number;
+  final_score: number;
+}
+
+export function useFinalCourseRatings() {
+  const [ratings, setRatings] = useState<FinalRating[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  useEffect(() => {
+    const fetchRatings = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase.rpc('get_final_course_ratings');
+
+        if (error) throw error;
+        setRatings(data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error loading ratings');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRatings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { ratings, loading, error };
+}
