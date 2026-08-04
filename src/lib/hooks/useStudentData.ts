@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useCohort } from "@/lib/cohort/CohortProvider";
 
 export type StudentProgress = {
   lesson_id: number;
@@ -40,14 +41,29 @@ export type StudentData = {
 };
 
 export function useStudentData(userId: string | undefined) {
+  const { activeCohortId } = useCohort();
   const [data, setData] = useState<StudentData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    setData(null);
+
     if (!userId) {
       setLoading(false);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
+
+    if (!activeCohortId) {
+      setLoading(true);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setLoading(true);
 
     async function load() {
       const supabase = createClient();
@@ -60,13 +76,36 @@ export function useStudentData(userId: string | undefined) {
         { data: gamification },
         { data: userData },
       ] = await Promise.all([
-        supabase.from("student_progress").select("*").eq("user_id", userId),
-        supabase.from("assignment_submissions").select("*").eq("user_id", userId),
-        supabase.from("agent_launches").select("*").eq("user_id", userId),
-        supabase.from("platform_visits").select("*").eq("user_id", userId),
-        supabase.from("gamification").select("*").eq("user_id", userId).single(),
+        supabase
+          .from("student_progress")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("cohort_id", activeCohortId),
+        supabase
+          .from("assignment_submissions")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("cohort_id", activeCohortId),
+        supabase
+          .from("agent_launches")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("cohort_id", activeCohortId),
+        supabase
+          .from("platform_visits")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("cohort_id", activeCohortId),
+        supabase
+          .from("gamification")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("cohort_id", activeCohortId)
+          .maybeSingle(),
         supabase.from("users").select("goal").eq("id", userId).single(),
       ]);
+
+      if (cancelled) return;
 
       setData({
         progress: progress as StudentProgress[] | null,
@@ -80,7 +119,11 @@ export function useStudentData(userId: string | undefined) {
     }
 
     load();
-  }, [userId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCohortId, userId]);
 
   return { data, loading };
 }

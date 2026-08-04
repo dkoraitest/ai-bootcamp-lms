@@ -3,21 +3,28 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useCohort } from "@/lib/cohort/CohortProvider";
 
 type Row = { name: string; points: number };
 
 const MEDALS: Record<number, string> = { 1: "🥇", 2: "🥈", 3: "🥉" };
 
 export default function Leaderboard() {
+  const { activeCohortId } = useCohort();
   const [rows, setRows] = useState<Row[] | null>(null);
 
   useEffect(() => {
+    if (!activeCohortId) {
+      setRows(null);
+      return;
+    }
+
     async function load() {
       const supabase = createClient();
 
-      // get_leaderboard() — security-definer функция, обходит RLS и
-      // отдаёт баллы всех участников из gamification.points
-      const { data } = await supabase.rpc("get_leaderboard");
+      const { data } = await supabase.rpc("get_leaderboard", {
+        p_cohort_id: activeCohortId,
+      });
 
       const result: Row[] = (data ?? [])
         .map((r: { name: string; points: number | null }) => ({
@@ -30,7 +37,7 @@ export default function Leaderboard() {
     }
 
     load();
-  }, []);
+  }, [activeCohortId]);
 
   return (
     <div className="bg-white rounded-[8px] border border-[#e4e4e7] shadow-sm p-6">

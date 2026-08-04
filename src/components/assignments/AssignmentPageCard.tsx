@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, CheckCircle2, Circle, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useCohort } from "@/lib/cohort/CohortProvider";
 
 export type ChecklistItem = {
   id: number;
@@ -107,6 +108,7 @@ export default function AssignmentPageCard({
   isExpert = false,
   onStudentSubmit,
 }: Props) {
+  const { activeCohortId } = useCohort();
   const tabs = isExpert ? EXPERT_TABS : STUDENT_TABS;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -207,8 +209,15 @@ export default function AssignmentPageCard({
     setExpertSaving(true);
     setExpertError("");
 
+    if (!activeCohortId) {
+      setExpertError("Поток ещё загружается. Попробуй ещё раз.");
+      setExpertSaving(false);
+      return;
+    }
+
     const supabase = createClient();
     const { error } = await supabase.rpc("submit_expert_feedback", {
+      p_cohort_id: activeCohortId,
       student_email: studentEmail.trim(),
       hw_number: assignment.hwNumber,
       feedback_text: feedbackText.trim(),

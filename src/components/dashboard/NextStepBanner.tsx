@@ -12,6 +12,8 @@ type Props = {
   nextLessonNumber: number;
   nextLessonTopic: string;
   href?: string;
+  recordingAvailable?: boolean;
+  recordingLessonNumber?: number;
 };
 
 function getBannerText(props: Props): string {
@@ -28,7 +30,7 @@ function getBannerText(props: Props): string {
     nextLessonTopic,
   } = props;
 
-  if (hwCompleted < hwTotal && daysLeft <= 2) {
+  if (hwNumber > 0 && hwCompleted < hwTotal && daysLeft <= 2) {
     return `Сдай ДЗ #${hwNumber} — дедлайн через ${daysLeft} дн.`;
   }
   if (peerReviewOpen) {
@@ -38,7 +40,11 @@ function getBannerText(props: Props): string {
     return `Сегодня урок ${nextLessonNumber}: ${nextLessonTopic}`;
   }
   if (props.href) {
-    return "Посмотреть запись урока 7";
+    const lessonNum = props.recordingLessonNumber ?? nextLessonNumber;
+    return `Посмотреть запись урока ${lessonNum}`;
+  }
+  if (props.recordingAvailable === false) {
+    return "Дождись публикации расписания потока";
   }
   return `Посмотри запись Урока ${Math.max(1, lessonsCompleted)}`;
 }

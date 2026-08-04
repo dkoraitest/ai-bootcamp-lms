@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { SKILLS, SkillDef, Mastery } from "@/lib/data/skills";
+import { useCohort } from "@/lib/cohort/CohortProvider";
 
 export type ComputedSkill = SkillDef & {
   mastery: Mastery;
@@ -65,28 +66,36 @@ function computeSkill(
 }
 
 export function useSkillData(userId: string | undefined, email?: string | null) {
+  const { activeCohortId } = useCohort();
   const [skills, setSkills] = useState<ComputedSkill[]>(
     SKILLS.map((s) => ({ ...s, mastery: 0, score: 0, lessonsDone: 0, hwStatus: "none" }))
   );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) {
+    let cancelled = false;
+    setSkills(SKILLS.map((s) => ({ ...s, mastery: 0, score: 0, lessonsDone: 0, hwStatus: "none" })));
+
+    if (!userId || !activeCohortId) {
       setLoading(false);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
+    setLoading(true);
+
     // Захардкоженная демо-картина для презентационного аккаунта.
-    if (email && email.toLowerCase() === DEMO_EMAIL) {
+    if (activeCohortId === "flow-1" && email && email.toLowerCase() === DEMO_EMAIL) {
       const lessonDone = (n: number) => DEMO_COMPLETED_LESSONS.has(n);
       const hwStatusOf = (hw: number): "none" | "submitted" | "reviewed" =>
         DEMO_REVIEWED_HW.has(hw) ? "reviewed" : "none";
       setSkills(SKILLS.map((skill) => computeSkill(skill, lessonDone, hwStatusOf)));
       setLoading(false);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
-
-    let cancelled = false;
 
     async function load() {
       const supabase = createClient();
@@ -95,8 +104,9 @@ export function useSkillData(userId: string | undefined, email?: string | null) 
         supabase
           .from("student_progress")
           .select("status, lessons(lesson_number)")
-          .eq("user_id", userId),
-        supabase.rpc("get_my_assignment_submissions"),
+          .eq("user_id", userId)
+          .eq("cohort_id", activeCohortId),
+        supabase.rpc("get_my_assignment_submissions", { p_cohort_id: activeCohortId }),
       ]);
 
       if (cancelled) return;
@@ -139,7 +149,7 @@ export function useSkillData(userId: string | undefined, email?: string | null) 
     return () => {
       cancelled = true;
     };
-  }, [userId, email]);
+  }, [activeCohortId, userId, email]);
 
   return { skills, loading };
 }

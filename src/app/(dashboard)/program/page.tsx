@@ -5,7 +5,9 @@ import ProgramProgressBar from "@/components/program/ProgramProgressBar";
 import WeekBlock from "@/components/program/WeekBlock";
 import { type AssignmentData } from "@/components/program/AssignmentCard";
 import { useLessonUrls } from "@/lib/hooks/useContentUrls";
+import { useCohortSchedule } from "@/lib/hooks/useContentUrls";
 import { useUser } from "@/lib/hooks/useUser";
+import { useCohort } from "@/lib/cohort/CohortProvider";
 import { createClient } from "@/lib/supabase/client";
 
 type SubmissionRow = {
@@ -18,8 +20,8 @@ type SubmissionRow = {
 type LessonStatus = "completed" | "watching" | "locked";
 
 type ProgressRow = {
-  lesson_id: number;
-  status: LessonStatus;
+  lesson_id: string;
+  status: string;
 };
 
 const LESSONS = [
@@ -184,25 +186,36 @@ const WEEKS = [1, 2, 3, 4, 5, 6];
 
 export default function ProgramPage() {
   const lessonUrls = useLessonUrls();
+  const { lessonSchedule, assignmentSchedule, loading: scheduleLoading } = useCohortSchedule();
   const { user } = useUser();
+  const { activeCohortId } = useCohort();
   const [submissionsByHw, setSubmissionsByHw] = useState<
     Record<number, SubmissionRow>
   >({});
   const [progressByLesson, setProgressByLesson] = useState<Record<number, LessonStatus>>({});
+  const [lessonUuidByNumber, setLessonUuidByNumber] = useState<Record<number, string>>({});
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!user?.id || !activeCohortId) {
       setSubmissionsByHw({});
       setProgressByLesson({});
+      setLessonUuidByNumber({});
       return;
     }
     let cancelled = false;
     const supabase = createClient();
 
     (async () => {
-      const [{ data: subData, error: subError }, { data: progData }] = await Promise.all([
-        supabase.rpc("get_my_assignment_submissions"),
-        supabase.from("student_progress").select("lesson_id, status").eq("user_id", user.id),
+      const [{ data: subData, error: subError }, { data: progData }, { data: lessonData }] = await Promise.all([
+        supabase.rpc("get_my_assignment_submissions", {
+          p_cohort_id: activeCohortId,
+        }),
+        supabase
+          .from("student_progress")
+          .select("lesson_id, status")
+          .eq("user_id", user.id)
+          .eq("cohort_id", activeCohortId),
+        supabase.from("lessons").select("id, lesson_number"),
       ]);
 
       if (cancelled) return;
@@ -216,51 +229,86 @@ export default function ProgramPage() {
       }
 
       if (progData) {
+        const lessonNumberById = new Map(
+          (lessonData ?? []).map((lesson) => [lesson.id as string, lesson.lesson_number as number])
+        );
         const map: Record<number, LessonStatus> = {};
         for (const row of progData as ProgressRow[]) {
-          map[row.lesson_id] = row.status;
+          const lessonNumber = lessonNumberById.get(row.lesson_id);
+          if (lessonNumber) {
+            map[lessonNumber] = row.status === "completed"
+              ? "completed"
+              : row.status === "watching"
+              ? "watching"
+              : "locked";
+          }
         }
         setProgressByLesson(map);
       }
+
+      const uuidMap: Record<number, string> = {};
+      for (const lesson of lessonData ?? []) {
+        uuidMap[lesson.lesson_number as number] = lesson.id as string;
+      }
+      setLessonUuidByNumber(uuidMap);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [activeCohortId, user?.id]);
 
-  async function handleStatusChange(lessonId: number, status: LessonStatus) {
-    if (!user?.id) return;
+  async function handleStatusChange(lessonNumber: number, status: LessonStatus) {
+    if (!user?.id || !activeCohortId) return;
+    const lessonId = lessonUuidByNumber[lessonNumber];
+    if (!lessonId) return;
     const supabase = createClient();
 
-    setProgressByLesson((prev) => ({ ...prev, [lessonId]: status }));
+    setProgressByLesson((prev) => ({ ...prev, [lessonNumber]: status }));
 
     if (status === "locked") {
       await supabase
         .from("student_progress")
         .delete()
         .eq("user_id", user.id)
+        .eq("cohort_id", activeCohortId)
         .eq("lesson_id", lessonId);
       setProgressByLesson((prev) => {
         const next = { ...prev };
-        delete next[lessonId];
+        delete next[lessonNumber];
         return next;
       });
     } else {
       await supabase
         .from("student_progress")
-        .upsert({ user_id: user.id, lesson_id: lessonId, status }, { onConflict: "user_id,lesson_id" });
+        .upsert(
+          { user_id: user.id, cohort_id: activeCohortId, lesson_id: lessonId, status },
+          { onConflict: "cohort_id,user_id,lesson_id" }
+        );
     }
   }
 
+  const scheduleByLesson = new Map(lessonSchedule.map((row) => [row.lesson_number, row]));
+  const scheduleByHw = new Map(assignmentSchedule.map((row) => [row.hw_number, row]));
   const assignments: Record<number, AssignmentData> = Object.fromEntries(
     Object.entries(ASSIGNMENTS).map(([lessonId, a]) => {
+      const schedule = scheduleByHw.get(a.hwNumber);
+      const deadline = schedule?.is_released && schedule.deadline
+        ? new Date(schedule.deadline).toLocaleString("ru-RU", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "Дата уточняется";
       const sub = submissionsByHw[a.hwNumber];
-      if (!sub) return [lessonId, a];
+      if (!sub) return [lessonId, { ...a, deadline }];
       return [
         lessonId,
         {
           ...a,
+          deadline,
           status: sub.status,
           githubUrl: sub.github_url ?? a.githubUrl,
           videoUrl: sub.video_url ?? a.videoUrl,
@@ -269,13 +317,15 @@ export default function ProgramPage() {
     })
   );
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   const lessons = LESSONS.map((l) => {
-    const [day, month, year] = l.date.split(".").map(Number);
-    const lessonDate = new Date(year, month - 1, day);
-    const isReleased = lessonDate <= today;
+    const schedule = scheduleByLesson.get(l.id);
+    const isReleased = Boolean(schedule?.is_released);
+    const lessonDate = schedule?.lesson_date
+      ? new Date(`${schedule.lesson_date}T00:00:00`)
+      : null;
+    const date = lessonDate
+      ? lessonDate.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" })
+      : "Дата уточняется";
 
     let status: LessonStatus;
     if (progressByLesson[l.id] !== undefined) {
@@ -286,10 +336,28 @@ export default function ProgramPage() {
       status = "locked";
     }
 
-    return { ...l, videoUrl: lessonUrls[l.id] ?? "", status };
+    return {
+      ...l,
+      date,
+      topic: schedule?.topic_override ?? l.topic,
+      videoUrl: lessonUrls[l.id] ?? "",
+      status,
+    };
   });
 
   const completedCount = lessons.filter((l) => l.status === "completed").length;
+
+  if (scheduleLoading) {
+    return (
+      <div className="space-y-3">
+        <div className="h-8 w-48 animate-pulse rounded bg-zinc-200" />
+        <div className="h-4 w-80 animate-pulse rounded bg-zinc-100" />
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-16 animate-pulse rounded-lg bg-white border border-zinc-200" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div>

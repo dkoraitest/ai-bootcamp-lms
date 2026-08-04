@@ -34,7 +34,7 @@ export default function RegisterPage() {
     setLoading(true);
     const supabase = createClient();
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { name } },
@@ -48,21 +48,6 @@ export default function RegisterPage() {
       }
       setLoading(false);
       return;
-    }
-
-    if (data.user) {
-      await supabase.from("gamification").insert({
-        user_id: data.user.id,
-        points: 0,
-        level: 1,
-        badges: [],
-        quests: [
-          { id: 1, name: "Первая неделя",  progress: 0, total: 3, completed: false },
-          { id: 2, name: "Кодер-агент",    progress: 0, total: 3, completed: false },
-          { id: 3, name: "Строитель ОС",   progress: 0, total: 3, completed: false },
-          { id: 4, name: "Агент 5/5",      progress: 0, total: 5, completed: false },
-        ],
-      });
     }
 
     router.push("/");

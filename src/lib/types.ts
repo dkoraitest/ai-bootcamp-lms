@@ -6,6 +6,14 @@ export type User = {
   created_at: string;
 };
 
+export type Cohort = {
+  id: string;
+  name: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_visible_to_students: boolean;
+};
+
 export type Lesson = {
   id: string;
   week: number;

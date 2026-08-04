@@ -33,7 +33,7 @@ export default function UpcomingEvents({ nextLesson, nextDeadline }: Props) {
           </span>
         </div>
         <p className="font-semibold text-[#18181b]">
-          Урок {nextLesson.number} · {nextLesson.date}
+          {nextLesson.number > 0 ? `Урок ${nextLesson.number} · ` : ""}{nextLesson.date}
         </p>
         <p className="text-sm text-[#71717a]">{nextLesson.topic}</p>
         <span className="mt-1 inline-block bg-zinc-100 text-zinc-600 text-xs px-2 py-0.5 rounded self-start">
@@ -51,12 +51,14 @@ export default function UpcomingEvents({ nextLesson, nextDeadline }: Props) {
           </span>
         </div>
         <p className="font-semibold text-[#18181b]">
-          ДЗ #{nextDeadline.hwNumber} · {nextDeadline.title}
+          {nextDeadline.hwNumber > 0 ? `ДЗ #${nextDeadline.hwNumber} · ` : ""}{nextDeadline.title}
         </p>
         <p className="text-sm text-[#71717a]">{nextDeadline.deadline}</p>
-        <p className={`text-sm font-medium ${deadlineColor}`}>
-          Осталось {nextDeadline.daysLeft} дня
-        </p>
+        {nextDeadline.hwNumber > 0 && (
+          <p className={`text-sm font-medium ${deadlineColor}`}>
+            Осталось {nextDeadline.daysLeft} дня
+          </p>
+        )}
       </div>
     </div>
   );

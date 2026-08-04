@@ -14,6 +14,8 @@ import AssignmentNotificationsPanel, {
 import AdminSubmissionQueue from "@/components/assignments/AdminSubmissionQueue";
 import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
+import { useCohort } from "@/lib/cohort/CohortProvider";
+import { useCohortSchedule } from "@/lib/hooks/useContentUrls";
 
 type StudentSubmissionRow = {
   assignment_id: number;
@@ -293,8 +295,10 @@ function mapNotificationRow(row: NotificationRow): AssignmentNotification {
 
 export default function AssignmentsPage() {
   const { user } = useUser();
+  const { activeCohortId, isPrivileged } = useCohort();
+  const { assignmentSchedule, loading: scheduleLoading } = useCohortSchedule();
   const role = (user?.app_metadata as Record<string, unknown> | undefined)?.role;
-  const isReviewer = role === "expert" || role === "admin";
+  const isReviewer = isPrivileged || role === "expert" || role === "admin";
 
   const [filter, setFilter] = useState<FilterKey>("all");
   const [assignments, setAssignments] = useState<AssignmentData[]>(INITIAL_ASSIGNMENTS);
@@ -317,8 +321,15 @@ export default function AssignmentsPage() {
       setLoadingPanel(true);
       const supabase = createClient();
 
+      if (!activeCohortId) {
+        setLoadingPanel(false);
+        return;
+      }
+
       if (isReviewer) {
-        const { data, error } = await supabase.rpc("get_assignment_submissions_feed");
+        const { data, error } = await supabase.rpc("get_assignment_submissions_feed", {
+          p_cohort_id: activeCohortId,
+        });
 
         if (isCancelled) return;
 
@@ -334,8 +345,8 @@ export default function AssignmentsPage() {
 
       const [{ data: submissions, error: submissionsError }, { data: messageData, error: messagesError }] =
         await Promise.all([
-          supabase.rpc("get_my_assignment_submissions"),
-          supabase.rpc("get_my_notifications"),
+          supabase.rpc("get_my_assignment_submissions", { p_cohort_id: activeCohortId }),
+          supabase.rpc("get_my_notifications", { p_cohort_id: activeCohortId }),
         ]);
 
       if (isCancelled) return;
@@ -367,7 +378,7 @@ export default function AssignmentsPage() {
     return () => {
       isCancelled = true;
     };
-  }, [isReviewer, user?.id]);
+  }, [activeCohortId, isReviewer, user?.id]);
 
   async function handleStudentSubmit(
     assignment: AssignmentData,
@@ -381,9 +392,16 @@ export default function AssignmentsPage() {
     }
 
     const supabase = createClient();
+    if (!activeCohortId) {
+      return {
+        ok: false,
+        error: "Поток ещё загружается. Попробуй ещё раз.",
+      };
+    }
     const submittedAt = new Date().toISOString();
 
     const { error } = await supabase.rpc("submit_student_assignment", {
+      p_cohort_id: activeCohortId,
       hw_number: assignment.hwNumber,
       github_link: payload.githubUrl.trim() || null,
       video_link: payload.videoUrl.trim() || null,
@@ -423,33 +441,65 @@ export default function AssignmentsPage() {
     return { ok: true, submittedAt };
   }
 
+  const cohortAssignments = useMemo(() => {
+    const scheduleByHw = new Map(assignmentSchedule.map((row) => [row.hw_number, row]));
+    if (scheduleLoading) return [];
+
+    return assignments.map((assignment) => {
+      const schedule = scheduleByHw.get(assignment.hwNumber);
+      if (!schedule?.is_released || !schedule.deadline) {
+        const status: AssignmentData["status"] =
+          assignment.status === "submitted" || assignment.status === "reviewed"
+            ? assignment.status
+            : "locked";
+        return { ...assignment, deadline: "Дата уточняется", daysLeft: 0, status };
+      }
+
+      const deadline = new Date(schedule.deadline);
+      return {
+        ...assignment,
+        deadline: deadline.toLocaleString("ru-RU", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        daysLeft: Math.max(
+          0,
+          Math.ceil((deadline.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+        ),
+      };
+    });
+  }, [assignmentSchedule, assignments, scheduleLoading]);
+
   const counts = useMemo(() => {
     const result = {} as Record<FilterKey, number>;
 
     for (const key of Object.keys(FILTER_MATCH) as FilterKey[]) {
-      result[key] = assignments.filter((assignment) =>
+      result[key] = cohortAssignments.filter((assignment) =>
         FILTER_MATCH[key].includes(assignment.status)
       ).length;
     }
 
     return result;
-  }, [assignments]);
+  }, [cohortAssignments]);
 
   const filtered = useMemo(
-    () => assignments.filter((assignment) => FILTER_MATCH[filter].includes(assignment.status)),
-    [assignments, filter]
+    () => cohortAssignments.filter((assignment) => FILTER_MATCH[filter].includes(assignment.status)),
+    [cohortAssignments, filter]
   );
 
-  const segments = assignments.map((assignment) => ({
+  const segments = cohortAssignments.map((assignment) => ({
     label: `ДЗ ${assignment.hwNumber}`,
     status: assignment.status,
   }));
 
-  const totalPoints = assignments.reduce(
+  const totalPoints = cohortAssignments.reduce(
     (sum, assignment) => sum + (assignment.pointsEarned ?? 0),
     0
   );
-  const maxPoints = assignments.reduce((sum, assignment) => sum + assignment.points, 0);
+  const maxPoints = cohortAssignments.reduce((sum, assignment) => sum + assignment.points, 0);
 
   const queueSubmissions = useMemo(
     () =>
@@ -505,14 +555,20 @@ export default function AssignmentsPage() {
         <AssignmentFilters active={filter} counts={counts} onChange={setFilter} />
 
         <div className="flex flex-col gap-3">
-          {filtered.map((assignment) => (
-            <AssignmentPageCard
-              key={assignment.id}
-              assignment={assignment}
-              isExpert={isReviewer}
-              onStudentSubmit={isReviewer ? undefined : handleStudentSubmit}
-            />
-          ))}
+          {scheduleLoading ? (
+            <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 px-4 py-5 text-sm text-zinc-500">
+              Загружаем расписание потока...
+            </div>
+          ) : (
+            filtered.map((assignment) => (
+              <AssignmentPageCard
+                key={assignment.id}
+                assignment={assignment}
+                isExpert={isReviewer}
+                onStudentSubmit={isReviewer ? undefined : handleStudentSubmit}
+              />
+            ))
+          )}
         </div>
       </div>
     </div>

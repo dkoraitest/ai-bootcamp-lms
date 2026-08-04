@@ -1,35 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useUser } from '@/lib/hooks/useUser';
+import { useCohort } from '@/lib/cohort/CohortProvider';
 import { VotesResultsTable } from '@/components/projects/VotesResultsTable';
 import { AlertCircle, BarChart3, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminProjectsResultsPage() {
-  const { user } = useUser();
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) {
-      setLoading(true);
-      return;
-    }
-
-    const email = user.email?.toLowerCase().trim();
-    const role = (user?.app_metadata as Record<string, unknown> | undefined)?.role;
-
-    // Check if user is admin/expert OR matches the specific email
-    const hasAccess =
-      role === 'admin' ||
-      role === 'expert' ||
-      email === 'kirabogdanova24@yandex.ru' ||
-      email === 'kira20032411@gmail.com';
-
-    setIsAuthorized(hasAccess);
-    setLoading(false);
-  }, [user]);
+  const { loading: userLoading } = useUser();
+  const { isPrivileged, isLoading: cohortLoading } = useCohort();
+  const loading = userLoading || cohortLoading;
+  const isAuthorized = isPrivileged;
 
   if (loading) {
     return (

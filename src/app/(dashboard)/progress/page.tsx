@@ -14,8 +14,8 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { useUser } from "@/lib/hooks/useUser";
 import { useStudentData } from "@/lib/hooks/useStudentData";
 import { getCaseForEmail } from "@/lib/data/cases";
+import { useCohort } from "@/lib/cohort/CohortProvider";
 
-const BOOTCAMP_START = new Date("2026-05-12");
 const BOOTCAMP_TOTAL_DAYS = 42;
 
 const LEVEL_NAMES: Record<number, string> = {
@@ -66,15 +66,21 @@ const MOCK_POINTS_HISTORY: { action: string; points: number; date: string }[] = 
 
 export default function ProgressPage() {
   const { user } = useUser();
+  const { activeCohort, activeCohortId } = useCohort();
   const { data: studentData, loading } = useStudentData(user?.id);
-  const myCase = getCaseForEmail(user?.email);
+  const myCase = activeCohortId === "flow-1" ? getCaseForEmail(user?.email) : null;
 
   const now = new Date();
-  const daysInBootcamp = Math.max(
-    1,
-    Math.ceil((now.getTime() - BOOTCAMP_START.getTime()) / (24 * 60 * 60 * 1000))
-  );
-  const weekNumber = Math.min(6, Math.max(1, Math.ceil(daysInBootcamp / 7)));
+  const cohortStart = activeCohort?.starts_at
+    ? new Date(`${activeCohort.starts_at}T00:00:00`)
+    : null;
+  const hasCohortStart = Boolean(cohortStart && !Number.isNaN(cohortStart.getTime()));
+  const daysInBootcamp = hasCohortStart
+    ? Math.max(1, Math.ceil((now.getTime() - (cohortStart as Date).getTime()) / (24 * 60 * 60 * 1000)))
+    : 0;
+  const weekNumber = daysInBootcamp === 0
+    ? 0
+    : Math.min(6, Math.max(1, Math.ceil(daysInBootcamp / 7)));
 
   const lessonsCompleted =
     studentData?.progress?.filter((p) => p.status === "completed").length ?? 0;
@@ -117,7 +123,9 @@ export default function ProgressPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-900">Мой прогресс</h1>
         <p className="text-sm text-[#71717a] mt-1">
-          День {daysInBootcamp} из {BOOTCAMP_TOTAL_DAYS} · Неделя {weekNumber} из 6
+          {daysInBootcamp === 0
+            ? "Период потока будет опубликован вместе с расписанием"
+            : `День ${daysInBootcamp} из ${BOOTCAMP_TOTAL_DAYS} · Неделя ${weekNumber} из 6`}
         </p>
       </div>
 

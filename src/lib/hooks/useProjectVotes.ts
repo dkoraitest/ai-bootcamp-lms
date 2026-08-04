@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { useCohort } from '@/lib/cohort/CohortProvider';
 
 interface Student {
   user_id: string;
@@ -26,28 +27,44 @@ interface VoteData {
 }
 
 export function useProjectVotes() {
+  const { activeCohortId } = useCohort();
   const [students, setStudents] = useState<Student[]>([]);
   const [currentVotes, setCurrentVotes] = useState<CurrentVotes>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
 
   useEffect(() => {
+    let cancelled = false;
+    setStudents([]);
+    setCurrentVotes({});
+    setError(null);
+    setLoading(Boolean(activeCohortId));
+
     const fetchData = async () => {
+      if (!activeCohortId) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
 
         const [studentsRes, votesRes] = await Promise.all([
-          supabase.rpc('get_students_for_voting'),
-          supabase.rpc('get_my_project_votes'),
+          supabase.rpc('get_students_for_voting', { p_cohort_id: activeCohortId }),
+          supabase.rpc('get_my_project_votes', { p_cohort_id: activeCohortId }),
         ]);
 
         if (studentsRes.error) throw studentsRes.error;
         if (votesRes.error) throw votesRes.error;
+        if (cancelled) return;
 
         setStudents(studentsRes.data || []);
 
@@ -57,19 +74,25 @@ export function useProjectVotes() {
         });
         setCurrentVotes(votesMap);
       } catch (err) {
+        if (cancelled) return;
         setError(err instanceof Error ? err.message : 'Error loading data');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCohortId, supabase]);
 
   const submitVotes = async (votes: { votee_id: string; score: number }[]) => {
     try {
+      if (!activeCohortId) throw new Error('Поток не выбран');
       const { data, error } = await supabase.rpc('submit_project_votes', {
+        p_cohort_id: activeCohortId,
         votes: votes,
       });
 
@@ -90,33 +113,53 @@ export function useProjectVotes() {
 }
 
 export function useVotesResults() {
+  const { activeCohortId } = useCohort();
   const [results, setResults] = useState<VoteResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
 
   useEffect(() => {
+    let cancelled = false;
+    setResults([]);
+    setError(null);
+    setLoading(Boolean(activeCohortId));
+
     const fetchResults = async () => {
       try {
+        if (!activeCohortId) {
+          setLoading(false);
+          return;
+        }
         setLoading(true);
-        const { data, error } = await supabase.rpc('get_project_votes_results');
+        const { data, error } = await supabase.rpc('get_project_votes_results', {
+          p_cohort_id: activeCohortId,
+        });
 
         if (error) throw error;
+        if (cancelled) return;
         setResults(data || []);
       } catch (err) {
+        if (cancelled) return;
         setError(err instanceof Error ? err.message : 'Error loading results');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchResults();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCohortId, supabase]);
 
   return { results, loading, error };
 }
@@ -131,33 +174,53 @@ interface FinalRating {
 }
 
 export function useFinalCourseRatings() {
+  const { activeCohortId } = useCohort();
   const [ratings, setRatings] = useState<FinalRating[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
 
   useEffect(() => {
+    let cancelled = false;
+    setRatings([]);
+    setError(null);
+    setLoading(Boolean(activeCohortId));
+
     const fetchRatings = async () => {
       try {
+        if (!activeCohortId) {
+          setLoading(false);
+          return;
+        }
         setLoading(true);
-        const { data, error } = await supabase.rpc('get_final_course_ratings');
+        const { data, error } = await supabase.rpc('get_final_course_ratings', {
+          p_cohort_id: activeCohortId,
+        });
 
         if (error) throw error;
+        if (cancelled) return;
         setRatings(data || []);
       } catch (err) {
+        if (cancelled) return;
         setError(err instanceof Error ? err.message : 'Error loading ratings');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchRatings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCohortId, supabase]);
 
   return { ratings, loading, error };
 }

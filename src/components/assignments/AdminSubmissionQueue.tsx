@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useCohort } from "@/lib/cohort/CohortProvider";
 
 type AdminSubmission = {
   id: string;
@@ -38,6 +39,7 @@ function formatTimestamp(value: string | null) {
 }
 
 function SubmissionCard({ submission }: { submission: AdminSubmission }) {
+  const { activeCohortId } = useCohort();
   const [expanded, setExpanded] = useState(false);
   const [feedback, setFeedback] = useState(submission.feedback ?? "");
   const [points, setPoints] = useState<string>(
@@ -53,8 +55,15 @@ function SubmissionCard({ submission }: { submission: AdminSubmission }) {
     setSaving(true);
     setError("");
 
+    if (!activeCohortId) {
+      setError("Поток ещё загружается. Попробуй ещё раз.");
+      setSaving(false);
+      return;
+    }
+
     const supabase = createClient();
     const { error: rpcError } = await supabase.rpc("review_assignment_submission", {
+      p_cohort_id: activeCohortId,
       submission_id: submission.id,
       feedback_text: feedback || null,
       earned_points: points ? parseInt(points, 10) : null,

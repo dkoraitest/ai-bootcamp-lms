@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { recordLaunch } from "@/lib/actions/recordLaunch";
+import { useCohort } from "@/lib/cohort/CohortProvider";
 
 const DAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const TODAY_INDEX = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
@@ -22,15 +23,16 @@ export default function LaunchTracker({
   userId,
   onLaunched,
 }: Props) {
+  const { activeCohortId } = useCohort();
   const [days, setDays] = useState(launchDaysThisWeek);
   const [count, setCount] = useState(launchesThisWeek);
   const [saving, setSaving] = useState(false);
 
   async function handleMark() {
-    if (!userId) return;
+    if (!userId || !activeCohortId) return;
 
     setSaving(true);
-    const { error } = await recordLaunch(userId);
+    const { error } = await recordLaunch(userId, activeCohortId);
 
     if (!error) {
       const updated = [...days];
