@@ -15,6 +15,7 @@ import { useUser } from "@/lib/hooks/useUser";
 import { useStudentData } from "@/lib/hooks/useStudentData";
 import { getCaseForEmail } from "@/lib/data/cases";
 import { useCohort } from "@/lib/cohort/CohortProvider";
+import { useCohortSchedule } from "@/lib/hooks/useContentUrls";
 
 const BOOTCAMP_TOTAL_DAYS = 42;
 
@@ -68,6 +69,7 @@ export default function ProgressPage() {
   const { user } = useUser();
   const { activeCohort, activeCohortId } = useCohort();
   const { data: studentData, loading } = useStudentData(user?.id);
+  const { lessonSchedule, assignmentSchedule } = useCohortSchedule();
   const myCase = activeCohortId === "flow-1" ? getCaseForEmail(user?.email) : null;
 
   const now = new Date();
@@ -78,9 +80,21 @@ export default function ProgressPage() {
   const daysInBootcamp = hasCohortStart
     ? Math.max(1, Math.ceil((now.getTime() - (cohortStart as Date).getTime()) / (24 * 60 * 60 * 1000)))
     : 0;
+  // Длина потока и объём программы берутся из дат потока: у второго
+  // потока восемь недель и шестнадцать уроков, а не шесть и двенадцать.
+  const cohortEnd = activeCohort?.ends_at ? new Date(`${activeCohort.ends_at}T00:00:00`) : null;
+  const hasCohortEnd = Boolean(cohortEnd && !Number.isNaN(cohortEnd.getTime()));
+  const totalWeeks = hasCohortStart && hasCohortEnd
+    ? Math.max(1, Math.ceil(((cohortEnd as Date).getTime() - (cohortStart as Date).getTime()) / (7 * 24 * 60 * 60 * 1000)))
+    : null;
+  const daysTotal = totalWeeks ? totalWeeks * 7 : BOOTCAMP_TOTAL_DAYS;
   const weekNumber = daysInBootcamp === 0
     ? 0
-    : Math.min(6, Math.max(1, Math.ceil(daysInBootcamp / 7)));
+    : Math.min(totalWeeks ?? 99, Math.max(1, Math.ceil(daysInBootcamp / 7)));
+
+  // Объём программы — сколько уроков и ДЗ в расписании этого потока.
+  const lessonsTotal = lessonSchedule.length > 0 ? lessonSchedule.length : 12;
+  const hwTotal = assignmentSchedule.length > 0 ? assignmentSchedule.length : 6;
 
   const lessonsCompleted =
     studentData?.progress?.filter((p) => p.status === "completed").length ?? 0;
@@ -125,7 +139,7 @@ export default function ProgressPage() {
         <p className="text-sm text-[#71717a] mt-1">
           {daysInBootcamp === 0
             ? "Период потока будет опубликован вместе с расписанием"
-            : `День ${daysInBootcamp} из ${BOOTCAMP_TOTAL_DAYS} · Неделя ${weekNumber} из 6`}
+            : `День ${daysInBootcamp} из ${daysTotal} · Неделя ${weekNumber}${totalWeeks ? ` из ${totalWeeks}` : ""}`}
         </p>
       </div>
 
@@ -142,13 +156,13 @@ export default function ProgressPage() {
           ) : (
             <StatsGrid
               lessonsCompleted={lessonsCompleted}
-              lessonsTotal={12}
+              lessonsTotal={lessonsTotal}
               hwCompleted={hwCompleted}
-              hwTotal={6}
+              hwTotal={hwTotal}
               totalVisits={totalVisits}
               visitsThisWeek={visitsThisWeek}
               daysInBootcamp={daysInBootcamp}
-              daysTotal={BOOTCAMP_TOTAL_DAYS}
+              daysTotal={daysTotal}
             />
           )}
 

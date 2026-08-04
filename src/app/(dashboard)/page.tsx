@@ -66,7 +66,10 @@ export default function HomePage() {
       date: new Date(`${lesson.lesson_date}T00:00:00`),
       source: lessonByNumber.get(lesson.lesson_number),
     }))
-    .filter((lesson) => lesson.source);
+    // Урок показывается, если у него есть название: либо из программы
+    // потока 1, либо заданное для этого потока в расписании. Иначе уроки
+    // сверх двенадцати (у потока 2 их шестнадцать) молча пропадали бы.
+    .filter((lesson) => lesson.source || lesson.title_override);
   const nextLessonData = releasedLessons.find((lesson) => lesson.date >= today) ?? releasedLessons.at(-1);
 
   const deadlineByNumber = new Map(DEADLINES_SCHEDULE.map((deadline) => [deadline.hwNumber, deadline]));
@@ -76,8 +79,7 @@ export default function HomePage() {
       ...assignment,
       date: new Date(assignment.deadline as string),
       source: deadlineByNumber.get(assignment.hw_number),
-    }))
-    .filter((assignment) => assignment.source);
+    }));
   const nextDeadlineData = releasedDeadlines.find((deadline) => deadline.date >= today) ?? releasedDeadlines.at(-1);
 
   const daysLeft = nextDeadlineData
@@ -98,7 +100,9 @@ export default function HomePage() {
 
   const nextDeadline = {
     hwNumber: nextDeadlineData?.hw_number ?? 0,
-    title: nextDeadlineData?.source?.title ?? "Расписание ещё не опубликовано",
+    title:
+      nextDeadlineData?.source?.title ??
+      (nextDeadlineData ? `ДЗ ${nextDeadlineData.hw_number}` : "Расписание ещё не опубликовано"),
     deadline: nextDeadlineData?.date.toLocaleString("ru-RU", {
       day: "2-digit",
       month: "2-digit",
@@ -116,9 +120,19 @@ export default function HomePage() {
   const daysInBootcamp = hasCohortStart
     ? Math.max(1, Math.ceil((now.getTime() - (cohortStart as Date).getTime()) / (24 * 60 * 60 * 1000)))
     : null;
+  // Длина потока берётся из его дат, а не из шести недель первого потока:
+  // второй идёт восемь недель, и «Неделя 7 из 6» выглядела бы поломкой.
+  const cohortEnd = activeCohort?.ends_at ? new Date(`${activeCohort.ends_at}T00:00:00`) : null;
+  const totalWeeks =
+    cohortStart && cohortEnd && !Number.isNaN(cohortEnd.getTime())
+      ? Math.max(1, Math.ceil((cohortEnd.getTime() - cohortStart.getTime()) / (7 * 24 * 60 * 60 * 1000)))
+      : null;
   const weekNumber = daysInBootcamp === null
     ? null
-    : Math.min(6, Math.max(1, Math.ceil(daysInBootcamp / 7)));
+    : Math.min(totalWeeks ?? 99, Math.max(1, Math.ceil(daysInBootcamp / 7)));
+
+  // Количество ДЗ — сколько их в расписании потока, а не всегда шесть.
+  const hwTotal = assignmentSchedule.length > 0 ? assignmentSchedule.length : 6;
 
   const points = studentData?.gamification?.points ?? 0;
   const level = points >= 1001 ? 5 : points >= 601 ? 4 : points >= 301 ? 3 : points >= 101 ? 2 : 1;
@@ -172,14 +186,14 @@ export default function HomePage() {
         <p className="text-sm text-[#71717a] mt-1">
           {daysInBootcamp === null
             ? "Период потока будет опубликован вместе с расписанием"
-            : `День ${daysInBootcamp} · Неделя ${weekNumber} из 6`}
+            : `День ${daysInBootcamp} · Неделя ${weekNumber}${totalWeeks ? ` из ${totalWeeks}` : ""}`}
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <NextStepBanner
           hwCompleted={hwCompleted}
-          hwTotal={6}
+          hwTotal={hwTotal}
           daysLeft={nextDeadline.daysLeft}
           hwNumber={nextDeadline.hwNumber}
           peerReviewOpen={false}
@@ -204,7 +218,7 @@ export default function HomePage() {
               lessonsCompleted={lessonsCompleted}
               lessonsTotal={12}
               hwCompleted={hwCompleted}
-              hwTotal={6}
+              hwTotal={hwTotal}
             />
 
             <GamificationWidget
