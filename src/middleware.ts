@@ -50,6 +50,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Админские страницы закрыты на сервере: проверки в браузере
+  // недостаточно, страницу можно открыть по прямой ссылке.
+  if (pathname.startsWith("/admin")) {
+    const role = (user?.app_metadata as Record<string, unknown> | undefined)?.role;
+    if (role !== "admin" && role !== "expert") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+  }
+
   return supabaseResponse;
 }
 

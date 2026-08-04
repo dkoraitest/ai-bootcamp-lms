@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/lib/hooks/useUser";
 
 const navItems = [
   { emoji: "🏠", label: "Главная",           href: "/" },
@@ -24,6 +25,10 @@ type Props = {
 export default function Sidebar({ userName }: Props) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useUser();
+
+  const role = (user?.app_metadata as Record<string, unknown> | undefined)?.role;
+  const isStaff = role === "admin" || role === "expert";
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -60,6 +65,20 @@ export default function Sidebar({ userName }: Props) {
             </Link>
           );
         })}
+
+        {isStaff && (
+          <Link
+            href="/admin"
+            className={`relative flex items-center gap-3 px-3 py-2 rounded-[6px] text-sm transition-colors mt-2 pt-3 border-t border-zinc-100 ${
+              pathname.startsWith("/admin")
+                ? "bg-[#f7f7f8] text-[#18181b] font-medium"
+                : "text-[#71717a] hover:bg-[#f7f7f8] hover:text-[#18181b]"
+            }`}
+          >
+            <span className="text-base leading-none">⚙️</span>
+            <span>Управление</span>
+          </Link>
+        )}
       </nav>
       <div className="px-3 py-4 border-t border-zinc-200">
         <button
