@@ -11,7 +11,8 @@ import { useMaterials } from "@/lib/hooks/useContentUrls";
 import { type Material } from "@/components/materials/MaterialCard";
 
 type TabKey = "all" | "video" | "template" | "technique";
-type WeekValue = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+// Номер недели: 0 — все недели. Диапазон зависит от потока.
+type WeekValue = number;
 
 function matchesSearch(m: Material, q: string): boolean {
   if (!q) return true;
@@ -37,6 +38,12 @@ export default function MaterialsPage() {
       return matchesTab && matchesWeek && matchesSearch(m, searchQuery);
     });
   }, [materials, searchQuery, activeTab, activeWeek]);
+
+  // Недели берутся из самих материалов потока, а не из шести недель первого.
+  const weeks = useMemo(
+    () => Array.from(new Set(materials.map((m) => m.week))).sort((a, b) => a - b),
+    [materials]
+  );
 
   const tabCounts = useMemo(() => {
     const base = materials.filter(
@@ -91,7 +98,7 @@ export default function MaterialsPage() {
       />
 
       {/* Week filter pills */}
-      <WeekFilterPills activeWeek={activeWeek} onWeekChange={setActiveWeek} />
+      <WeekFilterPills activeWeek={activeWeek} onWeekChange={setActiveWeek} weeks={weeks} />
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">

@@ -131,8 +131,9 @@ export default function HomePage() {
     ? null
     : Math.min(totalWeeks ?? 99, Math.max(1, Math.ceil(daysInBootcamp / 7)));
 
-  // Количество ДЗ — сколько их в расписании потока, а не всегда шесть.
+  // Объём программы — по расписанию потока, а не всегда 12 уроков и 6 ДЗ.
   const hwTotal = assignmentSchedule.length > 0 ? assignmentSchedule.length : 6;
+  const lessonsTotal = lessonSchedule.length > 0 ? lessonSchedule.length : 12;
 
   const points = studentData?.gamification?.points ?? 0;
   const level = points >= 1001 ? 5 : points >= 601 ? 4 : points >= 301 ? 3 : points >= 101 ? 2 : 1;
@@ -199,7 +200,7 @@ export default function HomePage() {
           peerReviewOpen={false}
           lessonToday={false}
           lessonsCompleted={lessonsCompleted}
-          lessonsTotal={12}
+          lessonsTotal={lessonsTotal}
           nextLessonNumber={nextLesson.number}
           nextLessonTopic={nextLesson.topic}
           href={activeCohortId === "flow-1" ? "https://drive.google.com/file/d/1bKF9JxY0RwzmoQxADJkglg9DsXoFXM5z/view?usp=drive_link" : undefined}
@@ -216,7 +217,7 @@ export default function HomePage() {
           <>
             <ProgressWidget
               lessonsCompleted={lessonsCompleted}
-              lessonsTotal={12}
+              lessonsTotal={lessonsTotal}
               hwCompleted={hwCompleted}
               hwTotal={hwTotal}
             />

@@ -182,7 +182,6 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
   },
 };
 
-const WEEKS = [1, 2, 3, 4, 5, 6];
 
 export default function ProgramPage() {
   const lessonUrls = useLessonUrls();
@@ -317,7 +316,26 @@ export default function ProgramPage() {
     })
   );
 
-  const lessons = LESSONS.map((l) => {
+  // Список уроков строится из расписания потока, а не только из программы
+  // первого потока: у второго потока шестнадцать занятий, и уроки сверх
+  // двенадцатого иначе не отрисовались бы вовсе.
+  const lessonBase = new Map(LESSONS.map((lesson) => [lesson.id, lesson]));
+  const lessonNumbers = Array.from(
+    new Set([...LESSONS.map((l) => l.id), ...lessonSchedule.map((s) => s.lesson_number)])
+  ).sort((a, b) => a - b);
+
+  const lessons = lessonNumbers.map((lessonNumber) => {
+    const base = lessonBase.get(lessonNumber);
+    const l = base ?? {
+      id: lessonNumber,
+      // Две встречи в неделю: урок 13 — это пятая неделя восьминедельного потока.
+      week: Math.ceil(lessonNumber / 2),
+      date: "Дата уточняется",
+      topic: `Урок ${lessonNumber}`,
+      hasHw: false,
+      status: "locked" as const,
+      videoUrl: "#",
+    };
     const schedule = scheduleByLesson.get(l.id);
     const isReleased = Boolean(schedule?.is_released);
     const lessonDate = schedule?.lesson_date
@@ -339,13 +357,17 @@ export default function ProgramPage() {
     return {
       ...l,
       date,
-      topic: schedule?.topic_override ?? l.topic,
+      topic: schedule?.topic_override ?? schedule?.title_override ?? l.topic,
       videoUrl: lessonUrls[l.id] ?? "",
       status,
     };
   });
 
   const completedCount = lessons.filter((l) => l.status === "completed").length;
+
+  // Недели берутся из уроков потока: шесть у первого, восемь у второго.
+  const weeks = Array.from(new Set(lessons.map((l) => l.week))).sort((a, b) => a - b);
+  const weekWord = weeks.length === 1 ? "неделя" : weeks.length < 5 ? "недели" : "недель";
 
   if (scheduleLoading) {
     return (
@@ -364,14 +386,14 @@ export default function ProgramPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-900">Программа</h1>
         <p className="text-sm text-[#71717a] mt-1">
-          6 недель · 12 занятий · 6 домашних заданий
+          {weeks.length} {weekWord} · {lessons.length} занятий · {assignmentSchedule.length || 6} домашних заданий
         </p>
       </div>
 
-      <ProgramProgressBar completed={completedCount} total={LESSONS.length} />
+      <ProgramProgressBar completed={completedCount} total={lessons.length} />
 
       <div className="flex flex-col gap-3">
-        {WEEKS.map((week) => (
+        {weeks.map((week) => (
           <WeekBlock
             key={week}
             weekNumber={week}
