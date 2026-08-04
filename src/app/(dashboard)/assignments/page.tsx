@@ -445,7 +445,37 @@ export default function AssignmentsPage() {
     const scheduleByHw = new Map(assignmentSchedule.map((row) => [row.hw_number, row]));
     if (scheduleLoading) return [];
 
-    return assignments.map((assignment) => {
+    // Заготовка под ДЗ, которых нет в программе первого потока: у второго
+    // потока их может быть больше шести. Содержание заполняется позже,
+    // дедлайн и сдача работают сразу.
+    const byHwNumber = new Map(assignments.map((assignment) => [assignment.hwNumber, assignment]));
+    const extraAssignments: AssignmentData[] = assignmentSchedule
+      .filter((row) => !byHwNumber.has(row.hw_number))
+      .map((row) => ({
+        id: row.hw_number,
+        hwNumber: row.hw_number,
+        title: `ДЗ ${row.hw_number}`,
+        lessonId: row.hw_number * 2,
+        lessonTitle: `Урок ${row.hw_number * 2}`,
+        deadline: "Дата уточняется",
+        status: "not_started",
+        points: 50,
+        pointsEarned: null,
+        githubUrl: "",
+        videoUrl: "",
+        liveUrl: "",
+        artifact: "",
+        submittedAt: null,
+        description: "Описание задания появится вместе с программой потока.",
+        requirements: [],
+        checklist: [],
+        rubric: [],
+        feedback: null,
+      }));
+
+    return [...assignments, ...extraAssignments]
+      .sort((a, b) => a.hwNumber - b.hwNumber)
+      .map((assignment) => {
       const schedule = scheduleByHw.get(assignment.hwNumber);
       if (!schedule?.is_released || !schedule.deadline) {
         const status: AssignmentData["status"] =

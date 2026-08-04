@@ -141,13 +141,14 @@ export default function AdminSchedulePage() {
       ) : (
         <>
           <div className="bg-white border border-zinc-200 rounded-xl overflow-x-auto">
-            <table className="w-full text-sm min-w-[760px]">
+            <table className="w-full text-sm min-w-[980px]">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-zinc-400 border-b border-zinc-100">
                   <th className="px-4 py-3 font-medium">Урок</th>
                   <th className="px-4 py-3 font-medium">Дата</th>
                   <th className="px-4 py-3 font-medium">Начало</th>
-                  <th className="px-4 py-3 font-medium">Название (переопределение)</th>
+                  <th className="px-4 py-3 font-medium">Название</th>
+                  <th className="px-4 py-3 font-medium">Тема</th>
                   <th className="px-4 py-3 font-medium">Открыт</th>
                 </tr>
               </thead>
@@ -181,7 +182,15 @@ export default function AdminSchedulePage() {
                         value={row.titleOverride ?? ""}
                         onChange={(e) => patchLesson(index, { titleOverride: e.target.value || null })}
                         placeholder="как в программе"
-                        className="w-full text-sm px-2 py-1 border border-zinc-200 rounded"
+                        className="w-full min-w-[180px] text-sm px-2 py-1 border border-zinc-200 rounded"
+                      />
+                    </td>
+                    <td className="px-4 py-2">
+                      <input
+                        value={row.topicOverride ?? ""}
+                        onChange={(e) => patchLesson(index, { topicOverride: e.target.value || null })}
+                        placeholder="о чём урок"
+                        className="w-full min-w-[220px] text-sm px-2 py-1 border border-zinc-200 rounded"
                       />
                     </td>
                     <td className="px-4 py-2">
