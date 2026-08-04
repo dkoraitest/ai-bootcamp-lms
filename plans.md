@@ -619,3 +619,11 @@ grant execute on function submit_student_assignment(text, int, text, text, text,
 3. Показываем часть материалов, которую админ явно откроет через настройки.
 
 Технически лучший вариант — третий: он дает гибкость и не требует нового деплоя при открытии материалов.
+## Update after manual QA - 2026-08-04
+
+- Student flow-1 and admin/expert flow were checked manually; switcher and material fixes were applied.
+- Final flow-2 material rule: copy all flow-1 materials except rows whose `materials.description` starts with `Запись урока`.
+- Migrations `013_flow2_material_visibility`, `014_flow2_material_visibility_by_title`, and `015_flow2_material_visibility_by_description` are applied.
+- Current flow-2 material state: 36 visible materials with URLs and 12 hidden lesson recordings.
+- Flow-2 schedule dates are deferred. Until dates are supplied, the UI must keep neutral schedule/deadline states and must not reuse flow-1 dates.
+- Manual authenticated QA is closed; the next product step is to populate flow-2 dates and run a focused schedule regression check.

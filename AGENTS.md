@@ -215,7 +215,7 @@ Important lesson-id issue:
 
 ### Stage 5. QA and Rollout
 
-Status: backend/RLS and automated checks completed on 2026-08-03; manual authenticated browser pass remains open. Report: `supabase/stage_5_qa_2026-08-03.md`.
+Status: backend/RLS, automated checks, and manual authenticated student/admin QA completed on 2026-08-04. Report: `supabase/stage_5_qa_2026-08-03.md`.
 
 Verify:
 
@@ -229,6 +229,8 @@ Verify:
 - lesson completion and badges write into the active cohort;
 - app build passes.
 - direct client execution of internal `increment_points` is revoked; launches use guarded `record_agent_launch(p_cohort_id)`.
+- flow-2 material policy is finalized: expose all flow-1 materials except rows whose `materials.description` starts with `Запись урока`; migrations `013-015` implement the final correction.
+- flow-2 schedule dates remain intentionally deferred; do not populate or display flow-1 dates as a fallback.
 
 ## Product Decisions Still Needed
 
@@ -239,6 +241,8 @@ Verify:
   - show only materials explicitly opened by admin.
 
 Recommended materials mode: explicit admin-controlled visibility through `cohort_material_settings`.
+
+The final material decision is now fixed: flow-2 exposes all flow-1 materials except lesson recordings identified by the `materials.description` prefix `Запись урока`.
 
 ## Verification Defaults
 
