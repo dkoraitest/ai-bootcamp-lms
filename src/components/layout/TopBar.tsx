@@ -3,6 +3,12 @@
 import { AlertCircle, ChevronDown, Layers3, RefreshCw } from "lucide-react";
 import { useCohort } from "@/lib/cohort/CohortProvider";
 
+function getCohortLabel(id: string, name: string) {
+  if (id === "flow-1") return "Поток 1";
+  if (id === "flow-2") return "Поток 2";
+  return name;
+}
+
 export default function TopBar() {
   const {
     cohorts,
@@ -54,7 +60,7 @@ export default function TopBar() {
             >
               {cohorts.map((cohort) => (
                 <option key={cohort.id} value={cohort.id}>
-                  {cohort.name}
+                  {getCohortLabel(cohort.id, cohort.name)}
                 </option>
               ))}
             </select>
