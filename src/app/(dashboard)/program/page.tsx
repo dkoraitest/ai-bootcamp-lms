@@ -24,62 +24,68 @@ type ProgressRow = {
   status: string;
 };
 
+// Запасная программа на случай, если расписание потока ещё не заполнено:
+// даты, темы и недели приходят из cohort_lesson_schedule и перекрывают эти.
 const LESSONS = [
-  { id: 1,  week: 1, date: "12.05.2026", topic: "AI Mindset: новая работа в эпоху агентов",             hasHw: false,                status: "locked" as const, videoUrl: "#" },
-  { id: 2,  week: 1, date: "14.05.2026", topic: "Переход в Cowork: AI который делает",                   hasHw: true,  hwNumber: 1,  status: "locked" as const, videoUrl: "#" },
-  { id: 3,  week: 2, date: "19.05.2026", topic: "Кодинг-агенты как класс. CC / Codex / IDE",             hasHw: false,                status: "locked" as const, videoUrl: "#" },
-  { id: 4,  week: 2, date: "21.05.2026", topic: "Vibe coding: 3 принципа + первый mini-app",             hasHw: true,  hwNumber: 2,  status: "locked"    as const, videoUrl: "#" },
-  { id: 5,  week: 3, date: "26.05.2026", topic: "Контекст как материал. R&D подход",                     hasHw: false,                status: "locked"    as const, videoUrl: "#" },
-  { id: 6,  week: 3, date: "28.05.2026", topic: "Skills и Commands: четыре примитива CC",                hasHw: true,  hwNumber: 3,  status: "locked"    as const, videoUrl: "#" },
-  { id: 7,  week: 4, date: "02.06.2026", topic: "4 уровня памяти агента",                                hasHw: false,                status: "locked"    as const, videoUrl: "#" },
-  { id: 8,  week: 4, date: "04.06.2026", topic: "Доверие, git, безопасность — инструментальный финал",   hasHw: true,  hwNumber: 4,  status: "locked"    as const, videoUrl: "#" },
-  { id: 9,  week: 5, date: "09.06.2026", topic: "Маркетинг + продажи (доменные кейсы)",                  hasHw: false,                status: "locked"    as const, videoUrl: "#" },
-  { id: 10, week: 5, date: "11.06.2026", topic: "Продукт + аналитика (доменные кейсы)",                  hasHw: true,  hwNumber: 5,  status: "locked"    as const, videoUrl: "#" },
-  { id: 11, week: 6, date: "16.06.2026", topic: "Безопасный агент + multi-agent (обзор)",                hasHw: false,                status: "locked"    as const, videoUrl: "#" },
-  { id: 12, week: 6, date: "18.06.2026", topic: "Demo Day — Защита проектов",  hasHw: false, isDemoDay: true, status: "locked" as const, videoUrl: "#" },
+  { id: 1,  week: 1, date: "06.08.2026", topic: "Что такое вайб кодинг + лестница автономии",   hasHw: false,                status: "locked" as const, videoUrl: "#" },
+  { id: 2,  week: 1, date: "11.08.2026", topic: "Цикл вайб-кодинга + экономика",                 hasHw: true,  hwNumber: 1,  status: "locked" as const, videoUrl: "#" },
+  { id: 3,  week: 2, date: "13.08.2026", topic: "Кодинг-агент: от разового ответа к инструменту", hasHw: false,               status: "locked" as const, videoUrl: "#" },
+  { id: 4,  week: 2, date: "18.08.2026", topic: "Цикл на полную: 3 принципа + публичная ссылка", hasHw: true,  hwNumber: 2,  status: "locked"    as const, videoUrl: "#" },
+  { id: 5,  week: 3, date: "20.08.2026", topic: "Контекст агента: CLAUDE.md и структура папок",  hasHw: false,                status: "locked"    as const, videoUrl: "#" },
+  { id: 6,  week: 3, date: "25.08.2026", topic: "Расширения агента: slash и skill",              hasHw: true,  hwNumber: 3,  status: "locked"    as const, videoUrl: "#" },
+  { id: 7,  week: 4, date: "27.08.2026", topic: "Руки агента: MCP и внешние системы",            hasHw: false,                status: "locked"    as const, videoUrl: "#" },
+  { id: 8,  week: 4, date: "01.09.2026", topic: "Память агента: четыре уровня",                  hasHw: true,  hwNumber: 4,  status: "locked"    as const, videoUrl: "#" },
+  { id: 9,  week: 5, date: "03.09.2026", topic: "Свой кейс: выбор и запуск",                     hasHw: false,                status: "locked"    as const, videoUrl: "#" },
+  { id: 10, week: 5, date: "08.09.2026", topic: "Свой кейс: доведение до результата",            hasHw: true,  hwNumber: 5,  status: "locked"    as const, videoUrl: "#" },
+  { id: 11, week: 6, date: "10.09.2026", topic: "Дисциплина: безопасность + мультиагент обзорно", hasHw: false,               status: "locked"    as const, videoUrl: "#" },
+  { id: 12, week: 6, date: "15.09.2026", topic: "Demo Day · Защита проектов",  hasHw: false, isDemoDay: true, status: "locked" as const, videoUrl: "#" },
 ];
 
 const WEEK_THEMES: Record<number, string> = {
-  1: "AI Mindset + Cowork",
-  2: "Кодинг-агенты + Vibe coding",
-  3: "Контекст + Skills",
-  4: "Память + Инструментальный фундамент",
-  5: "Домен: Маркетинг + Продукт",
-  6: "Безопасность + Demo Day",
+  1: "Вайб кодинг: формула и лестница",
+  2: "Кодинг-агент и первый продукт",
+  3: "Контекст агента и расширения",
+  4: "Руки и память агента",
+  5: "Своя задача в деле",
+  6: "Дисциплина и защита",
 };
 
 const TECHNIQUES: Record<number, string[]> = {
-  1:  ["Stage + Task + Rules формула", "AI Mindset framework", "Prompt-first подход"],
-  2:  ["Cowork automation loop", "Task decomposition", "Output verification"],
-  3:  ["CC vs Codex сравнение", "IDE integration patterns", "Agent scaffolding"],
-  4:  ["3 принципа vibe coding", "Deploy flow", "Git-first workflow"],
-  5:  ["CLAUDE.md структура", "Context layering", "R&D iteration loop"],
-  6:  ["Skills anatomy", "Slash-команды", "Subagent patterns", "MCP overview"],
-  7:  ["4 уровня памяти (L1-L4)", "Контекстное окно", "RAG vs Graph RAG"],
-  8:  ["3 уровня доверия", "Git/GitHub минимум", "Безопасность 80/20", "Шаблон research-agent"],
-  9:  ["Marketing agent кейсы", "Lead gen automation", "Content pipeline"],
-  10: ["Product analytics agent", "Data pipeline", "Insight generation"],
-  11: ["Trust boundaries", "Multi-agent coordination", "Safety checklist"],
+  1:  ["Формула Сцена + Задача + Правила", "Лестница автономии: чат → Cowork → код", "Границы вайб-кодинга"],
+  2:  ["Цикл промпт → результат → оценка → итерация", "Экономика лимитов", "Возврат в прерванную сессию"],
+  3:  ["Скрипт вместо разового ответа", "Проверка на вторых данных", "git как страховка и откат"],
+  4:  ["3 принципа вайб-кодинга", "Деплой публичной ссылки", "Коммит перед агент-сессией"],
+  5:  ["CLAUDE.md: 5 разделов", "Структура папок проекта", "Контекст как материал"],
+  6:  ["Четыре примитива Claude Code", "Slash-команды", "Skills под свои задачи"],
+  7:  ["MCP к своей системе", "Права доступа и read-only", "Аудит подключений"],
+  8:  ["4 уровня памяти", "Правило «поднимайся когда упёрся»", "База знаний и RAG"],
+  9:  ["Выбор доменного кейса", "Запуск на своих данных", "Публичная фиксация"],
+  10: ["Доведение кейса до результата", "Артефакт результата", "Peer review"],
+  11: ["Security audit: 4 вопроса", "Хуки guard и log", "Мультиагент: когда нужен"],
   12: [],
 };
 
 const ASSIGNMENTS: Record<number, AssignmentData> = {
   2: {
     hwNumber: 1,
-    title: "Первая Cowork-автоматизация",
-    description: "Возьмите одну свою рутинную задачу и автоматизируйте её в Cowork.",
-    deadline: "25.05.2026, воскресенье 23:59",
-    daysLeft: 4,
-    deliverables: ["Короткое видео-демо (30 сек) или скриншот готовой автоматизации"],
+    title: "Сводка через Cowork + своя рутина по формуле",
+    description: "Сделайте сводку через Cowork на общих данных в папке svodka/ и опишите свою рабочую рутину промптом по формуле Сцена + Задача + Правила.",
+    deadline: "17.08.2026, понедельник 12:00",
+    daysLeft: 11,
+    deliverables: [
+      "Файл сводки, созданный Cowork в общей папке svodka/ (скрин или запись экрана)",
+      "Промпт под свою рутину по формуле Сцена + Задача + Правила",
+    ],
     checklist: [
-      "Задача выбрана и описана",
-      "Автоматизация настроена в Cowork",
-      "Результат снят на видео или скриншот",
+      "Cowork запускается",
+      "Сводка по общим данным получена",
+      "Промпт написан по формуле Сцена + Задача + Правила",
+      "Промпт подтверждён двумя людьми из тройки",
     ],
     rubric: [
-      { level: "Базовый",  description: "Автоматизация работает, результат показан" },
-      { level: "Хороший",  description: "Задача реальная из вашей работы, есть описание зачем" },
-      { level: "Отличный", description: "Измеримый результат, экономия времени указана" },
+      { level: "Базовый",  description: "Сводка получена, промпт написан по формуле" },
+      { level: "Хороший",  description: "Рутина реальная из вашей работы, все три слота формулы заполнены" },
+      { level: "Отличный", description: "Промпт проверен в тройке и доработан по их замечаниям" },
     ],
     status: "not_started",
     githubUrl: "",
@@ -87,24 +93,26 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
   },
   4: {
     hwNumber: 2,
-    title: "Задеплоенный mini-app",
-    description: "Используя 3 принципа vibe coding, соберите и задеплойте простой веб-проект.",
-    deadline: "01.06.2026, воскресенье 23:59",
-    daysLeft: 11,
+    title: "Скрипт + задеплоенная страница",
+    description: "Доведите скрипт из Лайва 3 до работы на двух разных папках и задеплойте страницу, которая открывается у постороннего человека.",
+    deadline: "24.08.2026, понедельник 12:00",
+    daysLeft: 18,
     deliverables: [
-      "Живая ссылка на приложение",
-      "Ссылка на git-репозиторий",
-      "Пост в Telegram-чат курса",
+      "Публичная ссылка на страницу (открывается у постороннего)",
+      "git-репо с историей минимум 4 коммита",
+      "Скрипт из Лайва 3, отработавший на двух разных папках",
+      "Описание своей рабочей задачи по формуле",
     ],
     checklist: [
-      "Приложение задеплоено и открывается по ссылке",
-      "Репозиторий публичный",
-      "Пост опубликован в чате",
+      "Страница открывается по живой ссылке",
+      "Скрипт отработал на второй папке без правок",
+      "git-репо инициализирован, есть коммит перед агент-сессией",
+      "Ссылка опубликована в общем канале",
     ],
     rubric: [
-      { level: "Базовый",  description: "Приложение открывается, есть git-репо" },
-      { level: "Хороший",  description: "Приложение решает реальную задачу, понятен UX" },
-      { level: "Отличный", description: "Код чистый, есть README, приложение используется" },
+      { level: "Базовый",  description: "Страница открывается, репозиторий с историей есть" },
+      { level: "Хороший",  description: "Применён хотя бы один из трёх принципов вайб-кодинга, это видно в комментарии" },
+      { level: "Отличный", description: "Скрипт решает реальную задачу и переиспользуется на своих данных" },
     ],
     status: "not_started",
     githubUrl: "",
@@ -113,14 +121,16 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
   6: {
     hwNumber: 3,
     title: "Личная ОС в CLAUDE.md + 2 Skills",
-    description: "Создайте CLAUDE.md с 5 разделами и напишите 2 рабочих Skills.",
-    deadline: "08.06.2026, воскресенье 23:59",
-    daysLeft: 18,
-    deliverables: ["Ссылка на git-репо с CLAUDE.md и Skills"],
+    description: "Соберите личную ОС в CLAUDE.md (5 разделов по шаблону) и напишите 2 рабочих Skill под свои регулярные задачи. Один из них — апгрейд промпта из первой недели.",
+    deadline: "30.08.2026, воскресенье 23:59",
+    daysLeft: 24,
+    deliverables: ["Ссылка на git-репо с CLAUDE.md и двумя Skills"],
     checklist: [
-      "CLAUDE.md создан с 5 разделами",
-      "Каждый раздел минимум 2 строки",
-      "2 Skills написаны и работают",
+      "CLAUDE.md содержит все 5 разделов, минимум по 2 строки на раздел",
+      "MCP audit пройден, лишнее отключено",
+      "2 Skill реально вызываются и дают результат",
+      "Хотя бы один Skill — апгрейд промпта из первой недели",
+      "Дано peer review двум участникам своей тройки",
     ],
     rubric: [
       { level: "Базовый",  description: "CLAUDE.md создан, Skills существуют" },
@@ -133,22 +143,21 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
   },
   8: {
     hwNumber: 4,
-    title: "Ресёрч-агент на своей доменной задаче",
-    description: "Форкните шаблон ресёрч-агента и адаптируйте под свою роль (sales / HR / marketing / etc). Уровень доверия — read-only.",
-    deadline: "07.06.2026, воскресенье 23:59",
-    daysLeft: 25,
-    deliverables: ["Видео-демо настроенного агента на 3 запросах (1 мин)"],
+    title: "Ресёрч-агент с MCP + RAG",
+    description: "Разверните ресёрч-агента с одним MCP и одной базой знаний под свою задачу. Уровень доверия — read-only.",
+    deadline: "06.09.2026, воскресенье 23:59",
+    daysLeft: 31,
+    deliverables: ["Видео-демо агента на 1 минуту: вопрос → ответ по документам плюс веб-поиск"],
     checklist: [
-      "Форкнул шаблон через git clone",
-      "Адаптировал CLAUDE.md под свою роль",
-      "5-20 сущностей в data/known.csv",
-      "Запустил /research на 3 запросах",
-      "Видео снято",
+      "Подключён 1 MCP, он реально делает запросы",
+      "Подключена база знаний: свои документы или Notion",
+      "Уровень доверия read-only, hard writes отсутствуют",
+      "Видео-демо снято",
     ],
     rubric: [
-      { level: "Базовый",  description: "Шаблон форкнут, агент работает на 1 запросе" },
-      { level: "Хороший",  description: "CLAUDE.md адаптирован, агент даёт релевантные ответы" },
-      { level: "Отличный", description: "Шаблон под реальную задачу + 3+ кейса, можно использовать в работе" },
+      { level: "Базовый",  description: "MCP подключён, агент отвечает на один запрос" },
+      { level: "Хороший",  description: "Агент отвечает по своим документам и даёт релевантные ответы" },
+      { level: "Отличный", description: "Связка работает на реальной задаче, можно использовать в работе" },
     ],
     status: "not_started",
     githubUrl: "",
@@ -157,19 +166,19 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
   10: {
     hwNumber: 5,
     title: "Доменный кейс",
-    description: "Запустите CC-агента в своей доменной зоне на собственных данных.",
-    deadline: "22.06.2026, воскресенье 23:59",
-    daysLeft: 32,
+    description: "Разверните один кейс из своей доменной зоны: Claude Code плюс хотя бы один MCP и база знаний. Это ядро финального демо.",
+    deadline: "13.09.2026, воскресенье 23:59",
+    daysLeft: 38,
     deliverables: [
       "Ссылка на git-репозиторий",
       "Видео-демо (2–3 минуты)",
       "Артефакт результата: отчёт, контент, список лидов",
     ],
     checklist: [
-      "Доменная зона выбрана",
-      "Агент работает на реальных данных",
-      "Измеримый результат получен",
-      "Видео снято",
+      "Кейс работает на собственных данных, не на учебных",
+      "Использован минимум один MCP и минимум один источник знаний",
+      "Есть видимый результат: отчёт, контент, лиды или транскрипт",
+      "Дано peer review двум участникам своей доменной тройки",
     ],
     rubric: [
       { level: "Базовый",  description: "Агент запущен в домене, результат показан" },
@@ -316,9 +325,9 @@ export default function ProgramPage() {
     })
   );
 
-  // Список уроков строится из расписания потока, а не только из программы
-  // первого потока: у второго потока шестнадцать занятий, и уроки сверх
-  // двенадцатого иначе не отрисовались бы вовсе.
+  // Список уроков строится из расписания потока, а не из зашитой программы:
+  // у потока может быть любое число занятий, и всё сверх зашитого списка
+  // иначе не отрисовалось бы вовсе.
   const lessonBase = new Map(LESSONS.map((lesson) => [lesson.id, lesson]));
   const lessonNumbers = Array.from(
     new Set([...LESSONS.map((l) => l.id), ...lessonSchedule.map((s) => s.lesson_number)])
@@ -328,7 +337,7 @@ export default function ProgramPage() {
     const base = lessonBase.get(lessonNumber);
     const l = base ?? {
       id: lessonNumber,
-      // Две встречи в неделю: урок 13 — это пятая неделя восьминедельного потока.
+      // Две встречи в неделю, поэтому номер недели — это половина номера урока.
       week: Math.ceil(lessonNumber / 2),
       date: "Дата уточняется",
       topic: `Урок ${lessonNumber}`,
@@ -365,7 +374,7 @@ export default function ProgramPage() {
 
   const completedCount = lessons.filter((l) => l.status === "completed").length;
 
-  // Недели берутся из уроков потока: шесть у первого, восемь у второго.
+  // Недели берутся из уроков потока, а не из зашитых шести.
   const weeks = Array.from(new Set(lessons.map((l) => l.week))).sort((a, b) => a - b);
   const weekWord = weeks.length === 1 ? "неделя" : weeks.length < 5 ? "недели" : "недель";
 

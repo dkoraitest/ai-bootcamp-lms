@@ -13,28 +13,30 @@ import { useStudentData } from "@/lib/hooks/useStudentData";
 import { useCohort } from "@/lib/cohort/CohortProvider";
 import { useCohortSchedule } from "@/lib/hooks/useContentUrls";
 
+// Запасная программа: даты, время и темы приходят из расписания потока
+// и перекрывают эти значения. Здесь — программа второго потока.
 const LESSONS_SCHEDULE = [
-  { number: 1,  date: new Date("2026-05-12"), dateStr: "12 мая, вторник",  time: "14:30 МСК", topic: "AI Mindset: новая работа в эпоху агентов" },
-  { number: 2,  date: new Date("2026-05-14"), dateStr: "14 мая, четверг",  time: "18:00 МСК", topic: "Переход в Cowork: AI который делает" },
-  { number: 3,  date: new Date("2026-05-19"), dateStr: "19 мая, вторник",  time: "14:30 МСК", topic: "Кодинг-агенты как класс. CC / Codex / IDE" },
-  { number: 4,  date: new Date("2026-05-21"), dateStr: "21 мая, четверг",  time: "18:00 МСК", topic: "Vibe coding: 3 принципа + первый mini-app" },
-  { number: 5,  date: new Date("2026-05-26"), dateStr: "26 мая, вторник",  time: "14:30 МСК", topic: "Контекст как материал. R&D подход" },
-  { number: 6,  date: new Date("2026-05-28"), dateStr: "28 мая, четверг",  time: "18:00 МСК", topic: "Skills и Commands: четыре примитива CC" },
-  { number: 7,  date: new Date("2026-06-02"), dateStr: "2 июня, вторник",  time: "14:30 МСК", topic: "4 уровня памяти агента" },
-  { number: 8,  date: new Date("2026-06-04"), dateStr: "4 июня, четверг",  time: "18:00 МСК", topic: "Доверие, git, безопасность — инструментальный финал" },
-  { number: 9,  date: new Date("2026-06-09"), dateStr: "9 июня, вторник",  time: "14:30 МСК", topic: "Маркетинг + продажи (доменные кейсы)" },
-  { number: 10, date: new Date("2026-06-11"), dateStr: "11 июня, четверг", time: "18:00 МСК", topic: "Продукт + аналитика (доменные кейсы)" },
-  { number: 11, date: new Date("2026-06-16"), dateStr: "16 июня, вторник", time: "14:30 МСК", topic: "Безопасный агент + multi-agent" },
-  { number: 12, date: new Date("2026-06-18"), dateStr: "18 июня, четверг", time: "18:00 МСК", topic: "Demo Day — Защита проектов" },
+  { number: 1,  date: new Date("2026-08-06"), dateStr: "6 августа, четверг",   time: "18:00 МСК", topic: "Что такое вайб кодинг + лестница автономии" },
+  { number: 2,  date: new Date("2026-08-11"), dateStr: "11 августа, вторник",  time: "14:30 МСК", topic: "Цикл вайб-кодинга + экономика" },
+  { number: 3,  date: new Date("2026-08-13"), dateStr: "13 августа, четверг",  time: "18:00 МСК", topic: "Кодинг-агент: от разового ответа к инструменту" },
+  { number: 4,  date: new Date("2026-08-18"), dateStr: "18 августа, вторник",  time: "14:30 МСК", topic: "Цикл на полную: 3 принципа + публичная ссылка" },
+  { number: 5,  date: new Date("2026-08-20"), dateStr: "20 августа, четверг",  time: "18:00 МСК", topic: "Контекст агента: CLAUDE.md и структура папок" },
+  { number: 6,  date: new Date("2026-08-25"), dateStr: "25 августа, вторник",  time: "14:30 МСК", topic: "Расширения агента: slash и skill" },
+  { number: 7,  date: new Date("2026-08-27"), dateStr: "27 августа, четверг",  time: "18:00 МСК", topic: "Руки агента: MCP и внешние системы" },
+  { number: 8,  date: new Date("2026-09-01"), dateStr: "1 сентября, вторник",  time: "14:30 МСК", topic: "Память агента: четыре уровня" },
+  { number: 9,  date: new Date("2026-09-03"), dateStr: "3 сентября, четверг",  time: "18:00 МСК", topic: "Свой кейс: выбор и запуск" },
+  { number: 10, date: new Date("2026-09-08"), dateStr: "8 сентября, вторник",  time: "14:30 МСК", topic: "Свой кейс: доведение до результата" },
+  { number: 11, date: new Date("2026-09-10"), dateStr: "10 сентября, четверг", time: "18:00 МСК", topic: "Дисциплина: безопасность + мультиагент обзорно" },
+  { number: 12, date: new Date("2026-09-15"), dateStr: "15 сентября, вторник", time: "14:30 МСК", topic: "Demo Day · Защита проектов" },
 ];
 
 const DEADLINES_SCHEDULE = [
-  { hwNumber: 1, title: "Промпт-инжиниринг",    date: new Date("2026-05-17"), deadlineStr: "17 мая, воскресенье, 23:59" },
-  { hwNumber: 2, title: "Mini-App деплой",        date: new Date("2026-05-24"), deadlineStr: "24 мая, воскресенье, 23:59" },
-  { hwNumber: 3, title: "CLAUDE.md + Skills",     date: new Date("2026-05-31"), deadlineStr: "31 мая, воскресенье, 23:59" },
-  { hwNumber: 4, title: "Ресёрч-агент",            date: new Date("2026-06-07"), deadlineStr: "7 июня, воскресенье, 23:59" },
-  { hwNumber: 5, title: "Доменный кейс",          date: new Date("2026-06-14"), deadlineStr: "14 июня, воскресенье, 23:59" },
-  { hwNumber: 6, title: "Demo Day презентация",   date: new Date("2026-06-21"), deadlineStr: "21 июня, воскресенье, 23:59" },
+  { hwNumber: 1, title: "Сводка через Cowork + своя рутина", date: new Date("2026-08-17"), deadlineStr: "17 августа, понедельник, 12:00" },
+  { hwNumber: 2, title: "Скрипт + задеплоенная страница",    date: new Date("2026-08-24"), deadlineStr: "24 августа, понедельник, 12:00" },
+  { hwNumber: 3, title: "Личная ОС в CLAUDE.md + 2 Skills",  date: new Date("2026-08-30"), deadlineStr: "30 августа, воскресенье, 23:59" },
+  { hwNumber: 4, title: "Ресёрч-агент с MCP + RAG",          date: new Date("2026-09-06"), deadlineStr: "6 сентября, воскресенье, 23:59" },
+  { hwNumber: 5, title: "Доменный кейс",                     date: new Date("2026-09-13"), deadlineStr: "13 сентября, воскресенье, 23:59" },
+  { hwNumber: 6, title: "Финальный проект + питч",           date: new Date("2026-09-15"), deadlineStr: "15 сентября, вторник, 14:30" },
 ];
 
 export default function HomePage() {
@@ -66,9 +68,9 @@ export default function HomePage() {
       date: new Date(`${lesson.lesson_date}T00:00:00`),
       source: lessonByNumber.get(lesson.lesson_number),
     }))
-    // Урок показывается, если у него есть название: либо из программы
-    // потока 1, либо заданное для этого потока в расписании. Иначе уроки
-    // сверх двенадцати (у потока 2 их шестнадцать) молча пропадали бы.
+    // Урок показывается, если у него есть название: либо из зашитой
+    // программы, либо заданное для этого потока в расписании. Иначе уроки
+    // сверх зашитого списка молча пропадали бы.
     .filter((lesson) => lesson.source || lesson.title_override);
   const nextLessonData = releasedLessons.find((lesson) => lesson.date >= today) ?? releasedLessons.at(-1);
 
@@ -120,8 +122,8 @@ export default function HomePage() {
   const daysInBootcamp = hasCohortStart
     ? Math.max(1, Math.ceil((now.getTime() - (cohortStart as Date).getTime()) / (24 * 60 * 60 * 1000)))
     : null;
-  // Длина потока берётся из его дат, а не из шести недель первого потока:
-  // второй идёт восемь недель, и «Неделя 7 из 6» выглядела бы поломкой.
+  // Длина потока берётся из его дат, а не из зашитых шести недель:
+  // иначе у более длинного потока «Неделя 7 из 6» выглядела бы поломкой.
   const cohortEnd = activeCohort?.ends_at ? new Date(`${activeCohort.ends_at}T00:00:00`) : null;
   const totalWeeks =
     cohortStart && cohortEnd && !Number.isNaN(cohortEnd.getTime())
