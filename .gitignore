@@ -35,5 +35,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# one-off scripts
-/scripts/
+# скрипты по умолчанию разовые и в репозиторий не идут,
+# поддерживаемые перечисляются исключениями
+/scripts/*
+!/scripts/sync-program.mjs
+
+# генерируемые файлы
+/active/
