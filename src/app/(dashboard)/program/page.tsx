@@ -5,7 +5,7 @@ import ProgramProgressBar from "@/components/program/ProgramProgressBar";
 import WeekBlock from "@/components/program/WeekBlock";
 import { type AssignmentData } from "@/components/program/AssignmentCard";
 import { useLessonUrls } from "@/lib/hooks/useContentUrls";
-import { useCohortSchedule } from "@/lib/hooks/useContentUrls";
+import { useCohortSchedule, useAssignmentMaterials } from "@/lib/hooks/useContentUrls";
 import { useUser } from "@/lib/hooks/useUser";
 import { useCohort } from "@/lib/cohort/CohortProvider";
 import { createClient } from "@/lib/supabase/client";
@@ -69,7 +69,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
   2: {
     hwNumber: 1,
     title: "Сводка через Cowork + своя рутина по формуле",
-    description: "Сделайте сводку через Cowork на общих данных в папке svodka/ и опишите свою рабочую рутину промптом по формуле Сцена + Задача + Правила.",
+    description: "Сделайте сводку через Cowork на общих данных в папке svodka/ и опишите свою рабочую рутину промптом по формуле Сцена + Задача + Правила. Промпт покажите в общем чате потока.",
     deadline: "17.08.2026, понедельник 12:00",
     daysLeft: 11,
     deliverables: [
@@ -80,12 +80,12 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
       "Cowork запускается",
       "Сводка по общим данным получена",
       "Промпт написан по формуле Сцена + Задача + Правила",
-      "Промпт подтверждён двумя людьми из тройки",
+      "Промпт выложен в чат, двое участников откликнулись",
     ],
     rubric: [
       { level: "Базовый",  description: "Сводка получена, промпт написан по формуле" },
       { level: "Хороший",  description: "Рутина реальная из вашей работы, все три слота формулы заполнены" },
-      { level: "Отличный", description: "Промпт проверен в тройке и доработан по их замечаниям" },
+      { level: "Отличный", description: "Промпт доработан по замечаниям из чата" },
     ],
     status: "not_started",
     githubUrl: "",
@@ -130,7 +130,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
       "MCP audit пройден, лишнее отключено",
       "2 Skill реально вызываются и дают результат",
       "Хотя бы один Skill — апгрейд промпта из первой недели",
-      "Дано peer review двум участникам своей тройки",
+      "Дано peer review двум любым участникам потока",
     ],
     rubric: [
       { level: "Базовый",  description: "CLAUDE.md создан, Skills существуют" },
@@ -178,7 +178,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
       "Кейс работает на собственных данных, не на учебных",
       "Использован минимум один MCP и минимум один источник знаний",
       "Есть видимый результат: отчёт, контент, лиды или транскрипт",
-      "Дано peer review двум участникам своей доменной тройки",
+      "Дано peer review двум любым участникам потока",
     ],
     rubric: [
       { level: "Базовый",  description: "Агент запущен в домене, результат показан" },
@@ -195,6 +195,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
 export default function ProgramPage() {
   const lessonUrls = useLessonUrls();
   const { lessonSchedule, assignmentSchedule, loading: scheduleLoading } = useCohortSchedule();
+  const materialsByHw = useAssignmentMaterials();
   const { user } = useUser();
   const { activeCohortId } = useCohort();
   const [submissionsByHw, setSubmissionsByHw] = useState<
@@ -310,13 +311,15 @@ export default function ProgramPage() {
             minute: "2-digit",
           })
         : "Дата уточняется";
+      const materials = materialsByHw[a.hwNumber];
       const sub = submissionsByHw[a.hwNumber];
-      if (!sub) return [lessonId, { ...a, deadline }];
+      if (!sub) return [lessonId, { ...a, deadline, materials }];
       return [
         lessonId,
         {
           ...a,
           deadline,
+          materials,
           status: sub.status,
           githubUrl: sub.github_url ?? a.githubUrl,
           videoUrl: sub.video_url ?? a.videoUrl,

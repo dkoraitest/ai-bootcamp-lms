@@ -15,7 +15,7 @@ import AdminSubmissionQueue from "@/components/assignments/AdminSubmissionQueue"
 import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 import { useCohort } from "@/lib/cohort/CohortProvider";
-import { useCohortSchedule } from "@/lib/hooks/useContentUrls";
+import { useCohortSchedule, useAssignmentMaterials } from "@/lib/hooks/useContentUrls";
 
 type StudentSubmissionRow = {
   assignment_id: number;
@@ -66,20 +66,20 @@ const INITIAL_ASSIGNMENTS: AssignmentData[] = [
     artifact: "",
     submittedAt: null,
     description:
-      "Сделать сводку через Cowork на общих данных в папке svodka/ и описать свою рабочую рутину промптом по формуле Сцена + Задача + Правила. Промпт показать двум людям из своей тройки.",
+      "Сделать сводку через Cowork на общих данных в папке svodka/ и описать свою рабочую рутину промптом по формуле Сцена + Задача + Правила. Промпт показать в общем чате потока.",
     requirements: [
       "Развернуть Cowork: поставить, авторизоваться, проверить что всё работает",
       "Получить файл сводки в общей папке svodka/",
       "Приложить скрин или запись экрана с результатом",
       "Написать промпт под свою рутину по формуле Сцена + Задача + Правила",
-      "Получить подтверждение промпта от двух человек из тройки",
+      "Выложить промпт в общий чат и получить отклик от двух участников",
     ],
     checklist: [
       { id: 1, text: "Развернул Cowork и авторизовался", done: false },
       { id: 2, text: "Сводка по общим данным получена", done: false },
       { id: 3, text: "Подготовил скрин или запись экрана", done: false },
       { id: 4, text: "Написал промпт под свою рутину по формуле", done: false },
-      { id: 5, text: "Промпт подтверждён двумя людьми из тройки", done: false },
+      { id: 5, text: "Промпт выложен в чат, двое откликнулись", done: false },
     ],
     feedback: null,
   },
@@ -136,14 +136,14 @@ const INITIAL_ASSIGNMENTS: AssignmentData[] = [
       "MCP audit пройден, лишнее отключено",
       "2 Skill реально вызываются и дают результат",
       "Хотя бы один Skill — апгрейд промпта из первой недели",
-      "Дано peer review двум участникам своей тройки",
+      "Дано peer review двум любым участникам потока",
     ],
     checklist: [
       { id: 1, text: "Написал CLAUDE.md из 5 разделов", done: false },
       { id: 2, text: "Прошёл MCP audit, отключил лишнее", done: false },
       { id: 3, text: "Создал Skill #1 — апгрейд промпта W1", done: false },
       { id: 4, text: "Создал Skill #2", done: false },
-      { id: 5, text: "Дал peer review двум участникам тройки", done: false },
+      { id: 5, text: "Дал peer review двум участникам потока", done: false },
     ],
     feedback: null,
   },
@@ -206,7 +206,7 @@ const INITIAL_ASSIGNMENTS: AssignmentData[] = [
       { id: 2, text: "Агент работает на собственных данных", done: false },
       { id: 3, text: "Подключил MCP и источник знаний", done: false },
       { id: 4, text: "Снял видео 2–3 минуты", done: false },
-      { id: 5, text: "Дал peer review двум участникам доменной тройки", done: false },
+      { id: 5, text: "Дал peer review двум участникам потока", done: false },
     ],
     feedback: null,
   },
@@ -302,6 +302,7 @@ export default function AssignmentsPage() {
   const { user } = useUser();
   const { activeCohortId, isPrivileged } = useCohort();
   const { assignmentSchedule, loading: scheduleLoading } = useCohortSchedule();
+  const materialsByHw = useAssignmentMaterials();
   const role = (user?.app_metadata as Record<string, unknown> | undefined)?.role;
   const isReviewer = isPrivileged || role === "expert" || role === "admin";
 
@@ -482,17 +483,19 @@ export default function AssignmentsPage() {
       .sort((a, b) => a.hwNumber - b.hwNumber)
       .map((assignment) => {
       const schedule = scheduleByHw.get(assignment.hwNumber);
+      const materials = materialsByHw[assignment.hwNumber];
       if (!schedule?.is_released || !schedule.deadline) {
         const status: AssignmentData["status"] =
           assignment.status === "submitted" || assignment.status === "reviewed"
             ? assignment.status
             : "locked";
-        return { ...assignment, deadline: "Дата уточняется", daysLeft: 0, status };
+        return { ...assignment, materials, deadline: "Дата уточняется", daysLeft: 0, status };
       }
 
       const deadline = new Date(schedule.deadline);
       return {
         ...assignment,
+        materials,
         deadline: deadline.toLocaleString("ru-RU", {
           day: "2-digit",
           month: "2-digit",
@@ -506,7 +509,7 @@ export default function AssignmentsPage() {
         ),
       };
     });
-  }, [assignmentSchedule, assignments, scheduleLoading]);
+  }, [assignmentSchedule, assignments, materialsByHw, scheduleLoading]);
 
   const counts = useMemo(() => {
     const result = {} as Record<FilterKey, number>;

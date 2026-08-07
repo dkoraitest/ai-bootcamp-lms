@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { type Material } from "@/components/materials/MaterialCard";
 import { useCohort } from "@/lib/cohort/CohortProvider";
+import { HW_MATERIAL_IDS, type HwMaterial } from "@/lib/program/hwMaterials";
 
 export type CohortLessonSchedule = {
   lesson_number: number;
@@ -122,6 +123,33 @@ export function useMaterials(): { data: Material[]; loading: boolean } {
   }, [activeCohortId]);
 
   return { data, loading };
+}
+
+// Материалы, разложенные по номерам ДЗ: карточка задания показывает их
+// ссылками, чтобы артефакт открывался из самого задания.
+export function useAssignmentMaterials(): Record<number, HwMaterial[]> {
+  const { data } = useMaterials();
+
+  return useMemo(() => {
+    const byId = new Map(data.map((material) => [material.id, material]));
+    const result: Record<number, HwMaterial[]> = {};
+
+    for (const [hwNumber, materialIds] of Object.entries(HW_MATERIAL_IDS)) {
+      const items = materialIds
+        .map((id) => byId.get(id))
+        .filter((material): material is Material => Boolean(material?.url))
+        .map((material) => ({
+          id: material.id,
+          title: material.title.trim(),
+          url: material.url,
+          type: material.type,
+        }));
+
+      if (items.length > 0) result[Number(hwNumber)] = items;
+    }
+
+    return result;
+  }, [data]);
 }
 
 export function useCohortSchedule() {

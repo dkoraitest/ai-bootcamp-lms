@@ -4,6 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, CheckCircle2, Circle, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useCohort } from "@/lib/cohort/CohortProvider";
+import { type HwMaterial } from "@/lib/program/hwMaterials";
+
+const MATERIAL_EMOJI: Record<HwMaterial["type"], string> = {
+  video: "📹",
+  template: "📄",
+  technique: "💡",
+};
 
 export type ChecklistItem = {
   id: number;
@@ -29,6 +36,7 @@ export type AssignmentData = {
   submittedAt?: string | null;
   description: string;
   requirements: string[];
+  materials?: HwMaterial[];
   feedback: string | null;
 };
 
@@ -313,6 +321,29 @@ export default function AssignmentPageCard({
                   </li>
                 ))}
               </ul>
+
+              {assignment.materials && assignment.materials.length > 0 && (
+                <div className="mt-4 border-t border-zinc-100 pt-3">
+                  <p className="mb-2 text-xs font-medium text-zinc-500">
+                    Материалы к заданию
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {assignment.materials.map((material) => (
+                      <a
+                        key={material.id}
+                        href={material.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-700 transition-colors hover:border-[#4f46e5] hover:text-[#4f46e5]"
+                      >
+                        <span>{MATERIAL_EMOJI[material.type]}</span>
+                        {material.title}
+                        <ExternalLink size={12} className="shrink-0 opacity-60" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

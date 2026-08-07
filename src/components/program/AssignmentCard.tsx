@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import { type HwMaterial } from "@/lib/program/hwMaterials";
+
+const MATERIAL_EMOJI: Record<HwMaterial["type"], string> = {
+  video: "📹",
+  template: "📄",
+  technique: "💡",
+};
 
 type AssignmentStatus = "not_started" | "in_progress" | "submitted" | "reviewed";
 type Tab = "task" | "checklist" | "rubric" | "submit";
@@ -23,6 +30,7 @@ export type AssignmentData = {
   status: AssignmentStatus;
   githubUrl: string;
   videoUrl: string;
+  materials?: HwMaterial[];
 };
 
 type Props = {
@@ -123,6 +131,25 @@ export default function AssignmentCard({ assignment }: Props) {
                   ))}
                 </ul>
               </div>
+              {assignment.materials && assignment.materials.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-medium text-zinc-500">Материалы к заданию</p>
+                  <div className="flex flex-wrap gap-2">
+                    {assignment.materials.map((material) => (
+                      <a
+                        key={material.id}
+                        href={material.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-700 transition-colors hover:border-[#4f46e5] hover:text-[#4f46e5]"
+                      >
+                        <span>{MATERIAL_EMOJI[material.type]}</span>
+                        {material.title}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
               <p className={`text-sm ${deadlineColor}`}>
                 ⏰ Дедлайн: {assignment.deadline}
               </p>
