@@ -94,22 +94,55 @@ const lessons = parseCsv(readSource("lessons_v2.csv"))
   }))
   .sort((a, b) => a.number - b.number);
 
+const YEAR = Number(lessons[0].date.slice(0, 4));
+const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+// Дедлайны в источнике пишут как «Пт 15.08 12:00» или «Вт 15.09 Demo Day».
+// День недели там бывает проставлен неверно, поэтому опорная величина — дата,
+// а расхождение выносится в предупреждение.
+function parseDeadline(text) {
+  const match = text.match(/(\d{2})\.(\d{2})/);
+  if (!match) return { raw: text, date: null, time: null, warning: null };
+
+  const [, day, month] = match;
+  const date = `${YEAR}-${month}-${day}`;
+  const time = text.match(/(\d{1,2}:\d{2})/)?.[1] ?? null;
+
+  const statedDay = text.match(/^(Пн|Вт|Ср|Чт|Пт|Сб|Вс)/)?.[1] ?? null;
+  const actualDay = WEEKDAYS[(new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7];
+  const warning =
+    statedDay && statedDay !== actualDay
+      ? `в источнике «${statedDay}», но ${day}.${month} — это ${actualDay}`
+      : null;
+
+  return { raw: text, date, time, warning };
+}
+
 const assignments = parseCsv(readSource("assignments_v2.csv"))
   .filter((row) => row.hw_id)
   .map((row) => ({
     number: Number(row.hw_id.replace(/\D/g, "")),
     title: row.title,
-    deadline: row.deadline,
+    deliverable: row.deliverable,
+    deadline: parseDeadline(row.deadline),
     peerReview: row.peer_review,
   }))
   .sort((a, b) => a.number - b.number);
 
-// Темы недель лежат не в CSV, а в карте курса внутри 01_PROGRAM.html.
-const weekThemes = [
-  ...readSource("01_PROGRAM.html").matchAll(
-    /<div class="week-num">W(\d+)[^<]*<\/div><div class="week-title">([^<]+)</g
+// Раскладка занятий по неделям живёт в METHODOLOGY.md: 01_PROGRAM.html
+// помечен устаревшим, его поблочные тайминги отстают от сетки.
+const layout = [
+  ...readSource("teaching_kits/METHODOLOGY.md").matchAll(
+    /^\|\s*W(\d+)\s*\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|/gm
   ),
-].map(([, week, title]) => ({ week: Number(week), title: title.trim() }));
+].map(([, week, number, day, title]) => ({
+  week: Number(week),
+  number: Number(number),
+  day: day.trim(),
+  title: title.trim(),
+}));
+
+const weeks = [...new Set(layout.map((l) => l.week))].sort((a, b) => a - b);
 
 const sqlLiteral = (value) => `'${String(value).replace(/'/g, "''")}'`;
 
@@ -117,9 +150,25 @@ const lessonRows = lessons
   .map((l) => ` (${l.number}, date ${sqlLiteral(l.date)}, ${sqlLiteral(l.title)})`)
   .join(",\n");
 
+const datedDeadlines = assignments.filter((a) => a.deadline.date);
+const deadlineRows = datedDeadlines
+  .map((a) => ` (${a.number}, timestamptz ${sqlLiteral(`${a.deadline.date} ${a.deadline.time ?? "12:00"}+03`)})`)
+  .join(",\n");
+
+const deadlineSql = deadlineRows
+  ? `
+update cohort_assignment_schedule s
+set deadline = v.deadline, is_released = true
+from (values
+${deadlineRows}
+) as v(hw_number, deadline)
+where s.cohort_id = ${sqlLiteral(cohortId)} and s.hw_number = v.hw_number;
+`
+  : "\n-- Дедлайнов с датами в источнике нет, расписание ДЗ не трогаем.\n";
+
 const sql = `-- Расписание потока ${cohortId} по программе из ${source}
 -- Сгенерировано scripts/sync-program.mjs. Применять через Supabase MCP или SQL Editor.
--- Время занятий (starts_at) и дедлайны ДЗ скрипт не трогает: они задаются на /admin/schedule.
+-- Время занятий (starts_at) скрипт не трогает: оно задаётся на /admin/schedule.
 
 begin;
 
@@ -137,7 +186,7 @@ delete from cohort_lesson_schedule where cohort_id = ${sqlLiteral(cohortId)} and
 delete from cohort_lesson_settings  where cohort_id = ${sqlLiteral(cohortId)} and lesson_number > ${lessons.length};
 
 update cohorts set ends_at = date ${sqlLiteral(lessons.at(-1).date)} where id = ${sqlLiteral(cohortId)};
-
+${deadlineSql}
 commit;
 `;
 
@@ -171,21 +220,36 @@ function checkHardcoded() {
 
 console.log(`Источник: ${source}`);
 console.log(`Поток: ${cohortId}`);
-console.log(`\nЗанятий в программе: ${lessons.length}, ДЗ: ${assignments.length}, недель: ${weekThemes.length}`);
+console.log(`\nЗанятий: ${lessons.length}, ДЗ: ${assignments.length}, недель: ${weeks.length}`);
 console.log(`Даты: ${lessons[0].date} — ${lessons.at(-1).date}\n`);
 
-console.log("Занятия");
+console.log("Занятия (неделя из METHODOLOGY.md, дата и название из lessons_v2.csv)");
+const weekByLesson = new Map(layout.map((l) => [l.number, l.week]));
 for (const l of lessons) {
-  console.log(`  ${String(l.number).padStart(2)} · ${l.date} · W${l.week}${l.hw ? ` · ${l.hw}` : ""} · ${l.title}`);
+  const week = weekByLesson.get(l.number) ?? l.week;
+  console.log(`  ${String(l.number).padStart(2)} · ${l.date} · W${week}${l.hw ? ` · ${l.hw}` : ""} · ${l.title}`);
 }
 
-console.log("\nТемы недель");
-for (const w of weekThemes) console.log(`  W${w.week} · ${w.title}`);
+// Раскладка и CSV — два независимых файла, их расхождение означает,
+// что программу правили в одном месте и забыли в другом.
+const mismatches = lessons
+  .map((l) => ({ l, layout: layout.find((x) => x.number === l.number) }))
+  .filter(({ l, layout: row }) => row && (row.title !== l.title || row.week !== l.week));
+if (mismatches.length) {
+  console.log("\nРаскладка и CSV разошлись:");
+  for (const { l, layout: row } of mismatches) {
+    console.log(`  занятие ${l.number}: CSV «${l.title}» (W${l.week}) · METHODOLOGY «${row.title}» (W${row.week})`);
+  }
+}
 
-console.log("\nДЗ (дедлайны в источнике заданы словами, в базу их ставит человек)");
+console.log("\nДЗ");
 for (const a of assignments) {
+  const when = a.deadline.date
+    ? `${a.deadline.date} ${a.deadline.time ?? "12:00"} МСК`
+    : `${a.deadline.raw} (дату не распознал)`;
   console.log(`  ДЗ ${a.number} · ${a.title}`);
-  console.log(`        дедлайн: ${a.deadline} · пир-ревью: ${a.peerReview}`);
+  console.log(`        дедлайн: ${when} · пир-ревью: ${a.peerReview}`);
+  if (a.deadline.warning) console.log(`        ⚠ ${a.deadline.warning}`);
 }
 
 const problems = checkHardcoded();

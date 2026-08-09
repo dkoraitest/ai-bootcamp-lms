@@ -17,26 +17,26 @@ import { useCohortSchedule } from "@/lib/hooks/useContentUrls";
 // и перекрывают эти значения. Здесь — программа второго потока.
 const LESSONS_SCHEDULE = [
   { number: 1,  date: new Date("2026-08-06"), dateStr: "6 августа, четверг",   time: "18:00 МСК", topic: "Что такое вайб кодинг + лестница автономии" },
-  { number: 2,  date: new Date("2026-08-11"), dateStr: "11 августа, вторник",  time: "14:30 МСК", topic: "Цикл вайб-кодинга + экономика" },
-  { number: 3,  date: new Date("2026-08-13"), dateStr: "13 августа, четверг",  time: "18:00 МСК", topic: "Кодинг-агент: от разового ответа к инструменту" },
+  { number: 2,  date: new Date("2026-08-11"), dateStr: "11 августа, вторник",  time: "14:30 МСК", topic: "Рабочее место: VS Code, папки, settings.json" },
+  { number: 3,  date: new Date("2026-08-13"), dateStr: "13 августа, четверг",  time: "18:00 МСК", topic: "Личный контекст и первый проект" },
   { number: 4,  date: new Date("2026-08-18"), dateStr: "18 августа, вторник",  time: "14:30 МСК", topic: "Цикл на полную: 3 принципа + публичная ссылка" },
-  { number: 5,  date: new Date("2026-08-20"), dateStr: "20 августа, четверг",  time: "18:00 МСК", topic: "Контекст агента: CLAUDE.md и структура папок" },
-  { number: 6,  date: new Date("2026-08-25"), dateStr: "25 августа, вторник",  time: "14:30 МСК", topic: "Расширения агента: slash и skill" },
-  { number: 7,  date: new Date("2026-08-27"), dateStr: "27 августа, четверг",  time: "18:00 МСК", topic: "Руки агента: MCP и внешние системы" },
-  { number: 8,  date: new Date("2026-09-01"), dateStr: "1 сентября, вторник",  time: "14:30 МСК", topic: "Память агента: четыре уровня" },
+  { number: 5,  date: new Date("2026-08-20"), dateStr: "20 августа, четверг",  time: "18:00 МСК", topic: "Свои инструменты: slash и skill" },
+  { number: 6,  date: new Date("2026-08-25"), dateStr: "25 августа, вторник",  time: "14:30 МСК", topic: "Руки агента: MCP и внешние системы" },
+  { number: 7,  date: new Date("2026-08-27"), dateStr: "27 августа, четверг",  time: "18:00 МСК", topic: "Память агента: четыре уровня" },
+  { number: 8,  date: new Date("2026-09-01"), dateStr: "1 сентября, вторник",  time: "14:30 МСК", topic: "Безопасность выполнения" },
   { number: 9,  date: new Date("2026-09-03"), dateStr: "3 сентября, четверг",  time: "18:00 МСК", topic: "Свой кейс: выбор и запуск" },
   { number: 10, date: new Date("2026-09-08"), dateStr: "8 сентября, вторник",  time: "14:30 МСК", topic: "Свой кейс: доведение до результата" },
-  { number: 11, date: new Date("2026-09-10"), dateStr: "10 сентября, четверг", time: "18:00 МСК", topic: "Дисциплина: безопасность + мультиагент обзорно" },
+  { number: 11, date: new Date("2026-09-10"), dateStr: "10 сентября, четверг", time: "18:00 МСК", topic: "Мультиагент обзорно + подготовка защиты" },
   { number: 12, date: new Date("2026-09-15"), dateStr: "15 сентября, вторник", time: "14:30 МСК", topic: "Demo Day · Защита проектов" },
 ];
 
 const DEADLINES_SCHEDULE = [
-  { hwNumber: 1, title: "Сводка через Cowork + своя рутина", date: new Date("2026-08-17"), deadlineStr: "17 августа, понедельник, 12:00" },
-  { hwNumber: 2, title: "Скрипт + задеплоенная страница",    date: new Date("2026-08-24"), deadlineStr: "24 августа, понедельник, 12:00" },
-  { hwNumber: 3, title: "Личная ОС в CLAUDE.md + 2 Skills",  date: new Date("2026-08-30"), deadlineStr: "30 августа, воскресенье, 23:59" },
-  { hwNumber: 4, title: "Ресёрч-агент с MCP + RAG",          date: new Date("2026-09-06"), deadlineStr: "6 сентября, воскресенье, 23:59" },
-  { hwNumber: 5, title: "Доменный кейс",                     date: new Date("2026-09-13"), deadlineStr: "13 сентября, воскресенье, 23:59" },
-  { hwNumber: 6, title: "Финальный проект + питч",           date: new Date("2026-09-15"), deadlineStr: "15 сентября, вторник, 14:30" },
+  { hwNumber: 1, title: "Рабочий сетап — восемь галочек",       date: new Date("2026-08-15"), deadlineStr: "15 августа, 12:00" },
+  { hwNumber: 2, title: "Публичная ссылка + своя команда",      date: new Date("2026-08-25"), deadlineStr: "25 августа, 12:00" },
+  { hwNumber: 3, title: "MCP к своей системе + база знаний",    date: new Date("2026-09-01"), deadlineStr: "1 сентября, 12:00" },
+  { hwNumber: 4, title: "Защищённый агент + фиксация кейса",    date: new Date("2026-09-08"), deadlineStr: "8 сентября, 12:00" },
+  { hwNumber: 5, title: "Рабочий кейс на своих данных",         date: new Date("2026-09-15"), deadlineStr: "15 сентября, 12:00" },
+  { hwNumber: 6, title: "Финальный проект и защита",            date: new Date("2026-09-15"), deadlineStr: "15 сентября, 14:30" },
 ];
 
 export default function HomePage() {
@@ -122,16 +122,31 @@ export default function HomePage() {
   const daysInBootcamp = hasCohortStart
     ? Math.max(1, Math.ceil((now.getTime() - (cohortStart as Date).getTime()) / (24 * 60 * 60 * 1000)))
     : null;
-  // Длина потока берётся из его дат, а не из зашитых шести недель:
-  // иначе у более длинного потока «Неделя 7 из 6» выглядела бы поломкой.
-  const cohortEnd = activeCohort?.ends_at ? new Date(`${activeCohort.ends_at}T00:00:00`) : null;
-  const totalWeeks =
-    cohortStart && cohortEnd && !Number.isNaN(cohortEnd.getTime())
-      ? Math.max(1, Math.ceil((cohortEnd.getTime() - cohortStart.getTime()) / (7 * 24 * 60 * 60 * 1000)))
+
+  // Недели считаются календарными, от понедельника недели старта. Поток
+  // начинается в четверг, поэтому деление длительности на семь дало бы
+  // на неделю меньше, чем в программе, и «Неделя 7 из 6» выглядело бы поломкой.
+  const weekOfCohort = (date: Date) => {
+    if (!cohortStart) return null;
+    const firstMonday = new Date(cohortStart);
+    firstMonday.setDate(firstMonday.getDate() - ((firstMonday.getDay() + 6) % 7));
+    return Math.floor((date.getTime() - firstMonday.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  };
+
+  const lastLessonDate = lessonSchedule
+    .map((lesson) => lesson.lesson_date)
+    .filter((date): date is string => Boolean(date))
+    .sort()
+    .at(-1);
+  const cohortEnd = lastLessonDate
+    ? new Date(`${lastLessonDate}T00:00:00`)
+    : activeCohort?.ends_at
+      ? new Date(`${activeCohort.ends_at}T00:00:00`)
       : null;
-  const weekNumber = daysInBootcamp === null
-    ? null
-    : Math.min(totalWeeks ?? 99, Math.max(1, Math.ceil(daysInBootcamp / 7)));
+  const totalWeeks =
+    cohortEnd && !Number.isNaN(cohortEnd.getTime()) ? Math.max(1, weekOfCohort(cohortEnd) ?? 1) : null;
+  const weekNumber =
+    daysInBootcamp === null ? null : Math.min(totalWeeks ?? 99, Math.max(1, weekOfCohort(now) ?? 1));
 
   // Объём программы — по расписанию потока, а не всегда 12 уроков и 6 ДЗ.
   const hwTotal = assignmentSchedule.length > 0 ? assignmentSchedule.length : 6;
