@@ -261,7 +261,7 @@ export default function ProgramPage() {
   const { lessonSchedule, assignmentSchedule, loading: scheduleLoading } = useCohortSchedule();
   const materialsByHw = useAssignmentMaterials();
   const { user } = useUser();
-  const { activeCohortId } = useCohort();
+  const { activeCohortId, isPrivileged } = useCohort();
   const [submissionsByHw, setSubmissionsByHw] = useState<
     Record<number, SubmissionRow>
   >({});
@@ -364,7 +364,15 @@ export default function ProgramPage() {
   const scheduleByLesson = new Map(lessonSchedule.map((row) => [row.lesson_number, row]));
   const scheduleByHw = new Map(assignmentSchedule.map((row) => [row.hw_number, row]));
   const assignments: Record<number, AssignmentData> = Object.fromEntries(
-    Object.entries(ASSIGNMENTS).map(([lessonId, a]) => {
+    Object.entries(ASSIGNMENTS)
+      // Неопубликованное ДЗ студент не видит и в программе тоже — иначе
+      // «скрыть» в админке прячет его на одном экране и оставляет на другом.
+      .filter(([, a]) => {
+        if (isPrivileged) return true;
+        if (submissionsByHw[a.hwNumber]) return true;
+        return Boolean(scheduleByHw.get(a.hwNumber)?.is_released);
+      })
+      .map(([lessonId, a]) => {
       const schedule = scheduleByHw.get(a.hwNumber);
       const deadline = schedule?.is_released && schedule.deadline
         ? new Date(schedule.deadline).toLocaleString("ru-RU", {

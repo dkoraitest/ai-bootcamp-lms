@@ -503,7 +503,20 @@ export default function AssignmentsPage() {
         feedback: null,
       }));
 
+    // Снятая публикация означает, что задания для студента ещё нет: он его
+    // не видит вовсе. Раньше карточка всё равно рисовалась — заблокированной
+    // и без даты, и «скрыть ДЗ» в админке ничего не скрывало.
+    // Проверяющие видят весь список, чтобы вести расписание.
+    // Уже сданное остаётся на виду в любом случае: снять публикацию задним
+    // числом не должно прятать работу студента вместе с его сдачей.
+    const visibleForStudent = (assignment: AssignmentData) => {
+      if (isReviewer) return true;
+      if (assignment.status === "submitted" || assignment.status === "reviewed") return true;
+      return Boolean(scheduleByHw.get(assignment.hwNumber)?.is_released);
+    };
+
     return [...assignments, ...extraAssignments]
+      .filter(visibleForStudent)
       .sort((a, b) => a.hwNumber - b.hwNumber)
       .map((assignment) => {
       const schedule = scheduleByHw.get(assignment.hwNumber);
@@ -533,7 +546,7 @@ export default function AssignmentsPage() {
         ),
       };
     });
-  }, [assignmentSchedule, assignments, materialsByHw, scheduleLoading]);
+  }, [assignmentSchedule, assignments, materialsByHw, scheduleLoading, isReviewer]);
 
   const counts = useMemo(() => {
     const result = {} as Record<FilterKey, number>;
