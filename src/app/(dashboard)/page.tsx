@@ -31,7 +31,7 @@ const LESSONS_SCHEDULE = [
 ];
 
 const DEADLINES_SCHEDULE = [
-  { hwNumber: 1, title: "Сводка через Cowork + своя рутина",    date: new Date("2026-08-17"), deadlineStr: "17 августа, 12:00" },
+  { hwNumber: 1, title: "Сводка через Cowork + своя рутина",    date: new Date("2026-08-13"), deadlineStr: "13 августа, 12:00" },
   { hwNumber: 2, title: "Рабочий сетап — восемь галочек",       date: new Date("2026-08-15"), deadlineStr: "15 августа, 12:00" },
   { hwNumber: 3, title: "Публичная ссылка + своя команда",      date: new Date("2026-08-25"), deadlineStr: "25 августа, 12:00" },
   { hwNumber: 4, title: "MCP к своей системе + база знаний",    date: new Date("2026-09-01"), deadlineStr: "1 сентября, 12:00" },

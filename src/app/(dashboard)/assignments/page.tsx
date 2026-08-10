@@ -56,7 +56,7 @@ const INITIAL_ASSIGNMENTS: AssignmentData[] = [
     title: "Сводка через Cowork + своя рутина по формуле",
     lessonId: 1,
     lessonTitle: "Урок 1 · Что такое вайб кодинг + лестница автономии",
-    deadline: "17.08.2026",
+    deadline: "13.08.2026",
     status: "not_started",
     points: 50,
     pointsEarned: null,
