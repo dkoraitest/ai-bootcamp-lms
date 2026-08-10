@@ -31,6 +31,12 @@ const source = resolve(
 );
 const outPath = argValue("--out", null);
 
+// Нумерация ДЗ в LMS может опережать источник: в потоке 2 первым заданием
+// осталась «Сводка», которой в пересобранной программе уже нет, поэтому
+// её ДЗ N — это ДЗ N+1 в LMS. Без смещения сгенерированный SQL положил бы
+// дедлайны не на те задания.
+const hwOffset = Number(argValue("--hw-offset", "0"));
+
 // Минимальный CSV-разбор: поля в кавычках содержат запятые и переводы строк.
 function parseCsv(text) {
   const rows = [];
@@ -152,7 +158,10 @@ const lessonRows = lessons
 
 const datedDeadlines = assignments.filter((a) => a.deadline.date);
 const deadlineRows = datedDeadlines
-  .map((a) => ` (${a.number}, timestamptz ${sqlLiteral(`${a.deadline.date} ${a.deadline.time ?? "12:00"}+03`)})`)
+  .map(
+    (a) =>
+      ` (${a.number + hwOffset}, timestamptz ${sqlLiteral(`${a.deadline.date} ${a.deadline.time ?? "12:00"}+03`)})`
+  )
   .join(",\n");
 
 const deadlineSql = deadlineRows
@@ -242,12 +251,12 @@ if (mismatches.length) {
   }
 }
 
-console.log("\nДЗ");
+console.log(hwOffset ? `\nДЗ (в LMS их номера сдвинуты на +${hwOffset})` : "\nДЗ");
 for (const a of assignments) {
   const when = a.deadline.date
     ? `${a.deadline.date} ${a.deadline.time ?? "12:00"} МСК`
     : `${a.deadline.raw} (дату не распознал)`;
-  console.log(`  ДЗ ${a.number} · ${a.title}`);
+  console.log(`  ДЗ ${a.number + hwOffset} · ${a.title}`);
   console.log(`        дедлайн: ${when} · пир-ревью: ${a.peerReview}`);
   if (a.deadline.warning) console.log(`        ⚠ ${a.deadline.warning}`);
 }

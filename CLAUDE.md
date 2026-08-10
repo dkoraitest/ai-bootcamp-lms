@@ -36,10 +36,12 @@ LMS для 6-недельного AI Agent Bootcamp (12 уроков, 6 ДЗ, г
 Программа в том проекте меняется между потоками и по ходу. Чтобы LMS её догнала:
 
 ```bash
-npm run sync:program -- --cohort flow-2     # показать расхождения и SQL
-npm run sync:program -- --cohort flow-2 --out active/program.sql
-PROGRAM_SOURCE=/другой/путь npm run sync:program   # если проект лежит не рядом
+npm run sync:program -- --cohort flow-2 --hw-offset 1   # показать расхождения и SQL
+npm run sync:program -- --cohort flow-2 --hw-offset 1 --out active/program.sql
+PROGRAM_SOURCE=/другой/путь npm run sync:program        # если проект лежит не рядом
 ```
+
+**Про `--hw-offset` для потока 2.** В LMS семь ДЗ, а в источнике шесть. Первое задание («Сводка через Cowork») участники получили на первом занятии, а следующая пересборка программы его убрала — при этом сдачи по нему уже были. Задание вернули на место ДЗ 1, сетап стал ДЗ 2, остальные сдвинулись. Поэтому ДЗ N источника — это ДЗ N+1 в LMS, и без смещения скрипт положил бы дедлайны не на те задания. Когда источник добавит первое задание к себе, смещение уйдёт.
 
 Скрипт `scripts/sync-program.mjs` читает `lessons_v2.csv`, `assignments_v2.csv` и карту недель из `01_PROGRAM.html`, затем:
 
@@ -112,6 +114,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 Бейджи выдаются автоматически через Postgres-триггеры (`supabase/triggers.sql`) на таблицах `student_progress`, `assignment_submissions`, `agent_launches`, `peer_reviews`. Очки начисляются через `increment_points` RPC. Уровни: Новичок → Практик → Агент → Мастер → Эксперт.
 
 **Пороги уровней:** Новичок 0–100 → Практик 101–300 → Агент 301–600 → Мастер 601–1000 → Эксперт 1001+
+
+Бейджи за ДЗ выдаются по **номеру задания**, а не по его смыслу, поэтому при любой перенумерации ДЗ триггер надо править вместе с расписанием. Актуальная раскладка — миграция `017_badges_after_hw_renumber.sql`: ДЗ 1 → Prompt Master и Coworker, ДЗ 2 → Context King, ДЗ 3 → Vibe Coder и Skill Builder, ДЗ 4 → MCP Pioneer, ДЗ 6 → Domain Expert, ДЗ 7 → Demo Day. У ДЗ 5 подходящего бейджа нет. Таблица ниже описывает исходную раскладку первого потока.
 
 **Очки за бейджи:**
 

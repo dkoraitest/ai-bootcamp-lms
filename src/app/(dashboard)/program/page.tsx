@@ -27,18 +27,18 @@ type ProgressRow = {
 // Запасная программа на случай, если расписание потока ещё не заполнено:
 // даты, темы и недели приходят из cohort_lesson_schedule и перекрывают эти.
 const LESSONS = [
-  { id: 1,  week: 1, date: "06.08.2026", topic: "Что такое вайб кодинг + лестница автономии",   hasHw: false,                status: "locked" as const, videoUrl: "#" },
+  { id: 1,  week: 1, date: "06.08.2026", topic: "Что такое вайб кодинг + лестница автономии",   hasHw: true,  hwNumber: 1,  status: "locked" as const, videoUrl: "#" },
   { id: 2,  week: 2, date: "11.08.2026", topic: "Рабочее место: VS Code, папки, settings.json", hasHw: false,                status: "locked" as const, videoUrl: "#" },
-  { id: 3,  week: 2, date: "13.08.2026", topic: "Личный контекст и первый проект",              hasHw: true,  hwNumber: 1,  status: "locked" as const, videoUrl: "#" },
+  { id: 3,  week: 2, date: "13.08.2026", topic: "Личный контекст и первый проект",              hasHw: true,  hwNumber: 2,  status: "locked" as const, videoUrl: "#" },
   { id: 4,  week: 3, date: "18.08.2026", topic: "Цикл на полную: 3 принципа + публичная ссылка", hasHw: false,               status: "locked"    as const, videoUrl: "#" },
-  { id: 5,  week: 3, date: "20.08.2026", topic: "Свои инструменты: slash и skill",              hasHw: true,  hwNumber: 2,  status: "locked"    as const, videoUrl: "#" },
+  { id: 5,  week: 3, date: "20.08.2026", topic: "Свои инструменты: slash и skill",              hasHw: true,  hwNumber: 3,  status: "locked"    as const, videoUrl: "#" },
   { id: 6,  week: 4, date: "25.08.2026", topic: "Руки агента: MCP и внешние системы",           hasHw: false,                status: "locked"    as const, videoUrl: "#" },
-  { id: 7,  week: 4, date: "27.08.2026", topic: "Память агента: четыре уровня",                 hasHw: true,  hwNumber: 3,  status: "locked"    as const, videoUrl: "#" },
+  { id: 7,  week: 4, date: "27.08.2026", topic: "Память агента: четыре уровня",                 hasHw: true,  hwNumber: 4,  status: "locked"    as const, videoUrl: "#" },
   { id: 8,  week: 5, date: "01.09.2026", topic: "Безопасность выполнения",                      hasHw: false,                status: "locked"    as const, videoUrl: "#" },
-  { id: 9,  week: 5, date: "03.09.2026", topic: "Свой кейс: выбор и запуск",                    hasHw: true,  hwNumber: 4,  status: "locked"    as const, videoUrl: "#" },
-  { id: 10, week: 6, date: "08.09.2026", topic: "Свой кейс: доведение до результата",           hasHw: true,  hwNumber: 5,  status: "locked"    as const, videoUrl: "#" },
+  { id: 9,  week: 5, date: "03.09.2026", topic: "Свой кейс: выбор и запуск",                    hasHw: true,  hwNumber: 5,  status: "locked"    as const, videoUrl: "#" },
+  { id: 10, week: 6, date: "08.09.2026", topic: "Свой кейс: доведение до результата",           hasHw: true,  hwNumber: 6,  status: "locked"    as const, videoUrl: "#" },
   { id: 11, week: 6, date: "10.09.2026", topic: "Мультиагент обзорно + подготовка защиты",      hasHw: false,                status: "locked"    as const, videoUrl: "#" },
-  { id: 12, week: 7, date: "15.09.2026", topic: "Demo Day · Защита проектов",  hasHw: true, hwNumber: 6, isDemoDay: true, status: "locked" as const, videoUrl: "#" },
+  { id: 12, week: 7, date: "15.09.2026", topic: "Demo Day · Защита проектов",  hasHw: true, hwNumber: 7, isDemoDay: true, status: "locked" as const, videoUrl: "#" },
 ];
 
 // Две фазы: сетап (занятия 1-3) и задачи в собранной системе (4-12).
@@ -68,8 +68,33 @@ const TECHNIQUES: Record<number, string[]> = {
 };
 
 const ASSIGNMENTS: Record<number, AssignmentData> = {
-  3: {
+  1: {
     hwNumber: 1,
+    title: "Сводка через Cowork + своя рутина по формуле",
+    description: "Сделайте сводку через Cowork на общих данных в папке svodka/ и опишите свою рабочую рутину промптом по формуле Сцена + Задача + Правила. Промпт покажите в общем чате потока.",
+    deadline: "17.08.2026, 12:00",
+    daysLeft: 7,
+    deliverables: [
+      "Файл сводки, созданный Cowork в общей папке svodka/ (скрин или запись экрана)",
+      "Промпт под свою рутину по формуле Сцена + Задача + Правила",
+    ],
+    checklist: [
+      "Cowork запускается",
+      "Сводка по общим данным получена",
+      "Промпт написан по формуле Сцена + Задача + Правила",
+      "Промпт выложен в чат, двое участников откликнулись",
+    ],
+    rubric: [
+      { level: "Базовый",  description: "Сводка получена, промпт написан по формуле" },
+      { level: "Хороший",  description: "Рутина реальная из вашей работы, все три слота формулы заполнены" },
+      { level: "Отличный", description: "Промпт доработан по замечаниям из чата" },
+    ],
+    status: "not_started",
+    githubUrl: "",
+    videoUrl: "",
+  },
+  3: {
+    hwNumber: 2,
     title: "Рабочий сетап — восемь галочек",
     description: "Собрать систему, в которой вы делаете проекты и переключаете модели. Восемь пунктов, каждый проверяется скриншотом: либо есть, либо нет. Почти всё делается в эфире на Лайвах 2 и 3, дома остаётся добить хвосты.",
     deadline: "15.08.2026, 12:00",
@@ -100,7 +125,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
     videoUrl: "",
   },
   5: {
-    hwNumber: 2,
+    hwNumber: 3,
     title: "Публичная ссылка + своя команда",
     description: "Собрать и опубликовать результат, применив три принципа вайб-кодинга, и завернуть повторяющееся действие в свою slash-команду.",
     deadline: "25.08.2026, 12:00",
@@ -126,7 +151,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
     videoUrl: "",
   },
   7: {
-    hwNumber: 3,
+    hwNumber: 4,
     title: "MCP к своей системе + база знаний",
     description: "Подключить агента к своим источникам и выбрать уровень памяти под задачу по правилу «поднимайся когда упёрся».",
     deadline: "01.09.2026, 12:00",
@@ -152,7 +177,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
     videoUrl: "",
   },
   9: {
-    hwNumber: 4,
+    hwNumber: 5,
     title: "Защищённый агент + зафиксированный кейс",
     description: "Ограничить права агента двумя хуками и публично зафиксировать задачу, которая станет финальным проектом.",
     deadline: "08.09.2026, 12:00",
@@ -177,7 +202,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
     videoUrl: "",
   },
   10: {
-    hwNumber: 5,
+    hwNumber: 6,
     title: "Рабочий кейс на своих данных",
     description: "Довести зафиксированный кейс до измеримого результата. Это ядро финального демо.",
     deadline: "15.09.2026, 12:00",
@@ -203,7 +228,7 @@ const ASSIGNMENTS: Record<number, AssignmentData> = {
     videoUrl: "",
   },
   12: {
-    hwNumber: 6,
+    hwNumber: 7,
     title: "Финальный проект и защита",
     description: "Питч 5 минут на демо-дне плюс 3 минуты вопросов, рабочий проект за ним.",
     deadline: "15.09.2026, 14:30",
