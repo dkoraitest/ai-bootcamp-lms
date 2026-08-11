@@ -6,11 +6,13 @@
 // «Запросить доступ» ровно в тот момент, когда материал ему нужен.
 // Скрипт находит это раньше участника.
 //
-//   npm run check:materials -- --cohort flow-2
-//   npm run check:materials -- --cohort flow-2 --site https://ai-bootcamp-lms.vercel.app
+//   npm run check:materials -- --cohort flow-2 --email qa@example.com --password ...
+//   LMS_CHECK_EMAIL=... LMS_CHECK_PASSWORD=... npm run check:materials
 //
-// Читает публичным ключом, тем же, что и браузер студента, поэтому видит
-// ровно то, что видно неавторизованному: доступ проверяется честно.
+// Список материалов читается из-под учётной записи участника: таблица
+// настроек закрыта RLS, и анонимный ключ её не видит. А сами ссылки
+// проверяются без всякой авторизации — так же, как их откроет человек
+// в браузере, поэтому «просит вход» здесь означает реальную недоступность.
 
 import { readFileSync, existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
@@ -26,6 +28,8 @@ const argValue = (name, fallback) => {
 
 const cohortId = argValue("--cohort", "flow-2");
 const site = argValue("--site", "https://ai-bootcamp-lms.vercel.app");
+const email = argValue("--email", process.env.LMS_CHECK_EMAIL);
+const password = argValue("--password", process.env.LMS_CHECK_PASSWORD);
 
 function env(name) {
   if (process.env[name]) return process.env[name];
@@ -44,21 +48,40 @@ if (!url || !key) {
   process.exit(1);
 }
 
-async function loadMaterials() {
+async function signIn() {
+  if (!email || !password) {
+    console.error("Нужна учётная запись участника потока: --email и --password");
+    console.error("или переменные LMS_CHECK_EMAIL и LMS_CHECK_PASSWORD.");
+    process.exit(1);
+  }
+  const response = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { apikey: key, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await response.json();
+  if (!data.access_token) {
+    console.error(`Не удалось войти как ${email}: ${data.error_description ?? data.msg ?? "неизвестная ошибка"}`);
+    process.exit(1);
+  }
+  return data.access_token;
+}
+
+async function loadMaterials(token) {
   const settings = await fetch(
     `${url}/rest/v1/cohort_material_settings?cohort_id=eq.${cohortId}&is_visible=eq.true&select=material_id,url`,
-    { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    { headers: { apikey: key, Authorization: `Bearer ${token}` } }
   ).then((r) => r.json());
 
   if (!Array.isArray(settings) || settings.length === 0) {
-    console.error(`Материалов для потока ${cohortId} не видно. Проверь ключ и доступ.`);
+    console.error(`Материалов для потока ${cohortId} не видно: участник в него не входит?`);
     process.exit(1);
   }
 
   const ids = settings.map((row) => row.material_id).join(",");
   const materials = await fetch(
     `${url}/rest/v1/materials?id=in.(${ids})&select=id,title,type,url`,
-    { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    { headers: { apikey: key, Authorization: `Bearer ${token}` } }
   ).then((r) => r.json());
 
   const overrideById = new Map(settings.map((row) => [row.material_id, row.url]));
@@ -71,6 +94,24 @@ async function loadMaterials() {
     }))
     .filter((material) => material.link)
     .sort((a, b) => a.id - b.id);
+}
+
+const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
+
+// Проверяем по очереди с паузой: пачка параллельных запросов ловит 429
+// от GitHub, и живая ссылка попадает в отчёт как мёртвая.
+async function checkAll(items) {
+  const results = [];
+  for (const item of items) {
+    let result = await check(item);
+    if (result.verdict === "HTTP 429") {
+      await sleep(2000);
+      result = await check(item);
+    }
+    results.push(result);
+    await sleep(250);
+  }
+  return results;
 }
 
 async function check(material) {
@@ -93,8 +134,9 @@ async function check(material) {
   }
 }
 
-const materials = await loadMaterials();
-const results = await Promise.all(materials.map(check));
+const token = await signIn();
+const materials = await loadMaterials(token);
+const results = await checkAll(materials);
 const broken = results.filter((row) => !row.ok);
 
 console.log(`Поток: ${cohortId} · сайт: ${site}`);
