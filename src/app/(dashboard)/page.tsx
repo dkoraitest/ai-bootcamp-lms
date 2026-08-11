@@ -7,6 +7,7 @@ import WeeklyGoalCard from "@/components/dashboard/WeeklyGoalCard";
 import UpcomingEvents from "@/components/dashboard/UpcomingEvents";
 import QuickLinks from "@/components/dashboard/QuickLinks";
 import BootcampGoalsCard from "@/components/dashboard/BootcampGoalsCard";
+import CohortGoalsCard from "@/components/dashboard/CohortGoalsCard";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useUser } from "@/lib/hooks/useUser";
 import { useStudentData } from "@/lib/hooks/useStudentData";
@@ -259,10 +260,10 @@ export default function HomePage() {
 
         <QuickLinks />
 
-        {/* Цели собраны из встреч первого потока и лежат в коде, не в базе.
-            Второму потоку показывать нельзя: это имена, должности и рабочие
-            задачи чужих людей, которые сдавали их не для показа следующим. */}
-        {activeCohortId === "flow-1" && <BootcampGoalsCard />}
+        {/* У первого потока цели лежат разобранным файлом в коде — оставляем
+            как есть. Остальные потоки ведут цели в базе: участник пишет свою
+            сам, преподаватель дополняет по итогам встреч. */}
+        {activeCohortId === "flow-1" ? <BootcampGoalsCard /> : <CohortGoalsCard />}
       </div>
     </div>
   );
