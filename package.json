@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "sync:program": "node scripts/sync-program.mjs"
+    "sync:program": "node scripts/sync-program.mjs",
+    "check:materials": "node scripts/check-materials.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

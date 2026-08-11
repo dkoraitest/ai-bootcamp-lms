@@ -39,6 +39,7 @@ next-env.d.ts
 # поддерживаемые перечисляются исключениями
 /scripts/*
 !/scripts/sync-program.mjs
+!/scripts/check-materials.mjs
 
 # генерируемые файлы
 /active/
