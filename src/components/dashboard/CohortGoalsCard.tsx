@@ -1,28 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Target, X, Pencil } from "lucide-react";
-import { useCohortGoals, type WeeklyGoal } from "@/lib/hooks/useCohortGoals";
+import { Target, X, Plus, Trash2, Check } from "lucide-react";
+import { useCohortGoals, type GoalStatus } from "@/lib/hooks/useCohortGoals";
 
-const STATUS_META: Record<WeeklyGoal["status"], { icon: string; className: string }> = {
-  done: { icon: "✅", className: "text-[#16a34a]" },
-  missed: { icon: "❌", className: "text-[#dc2626]" },
-  in_progress: { icon: "⏳", className: "text-[#d97706]" },
+const STATUS_META: Record<GoalStatus, { icon: string; label: string; className: string }> = {
+  planned: { icon: "○", label: "Запланирована", className: "text-zinc-400" },
+  in_progress: { icon: "⏳", label: "В работе", className: "text-[#d97706]" },
+  done: { icon: "✅", label: "Сделана", className: "text-[#16a34a]" },
+  dropped: { icon: "❌", label: "Снята", className: "text-[#dc2626]" },
+};
+
+// Клик по статусу гоняет цель по кругу, чтобы не заводить выпадающий список
+// ради четырёх значений.
+const NEXT_STATUS: Record<GoalStatus, GoalStatus> = {
+  planned: "in_progress",
+  in_progress: "done",
+  done: "dropped",
+  dropped: "planned",
 };
 
 export default function CohortGoalsCard() {
-  const { goals, myGoal, loading, saveMyGoal } = useCohortGoals();
+  const { myGoals, otherGoals, loading, addGoal, updateGoal, deleteGoal, saveContext } =
+    useCohortGoals();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [mainGoal, setMainGoal] = useState("");
+  const [draft, setDraft] = useState("");
   const [context, setContext] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [contextDirty, setContextDirty] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setMainGoal(myGoal?.mainGoal ?? "");
-    setContext(myGoal?.context ?? "");
-  }, [myGoal]);
+    if (!contextDirty) setContext(myGoals?.context ?? "");
+  }, [myGoals, contextDirty]);
 
   useEffect(() => {
     if (!open) return;
@@ -37,20 +47,23 @@ export default function CohortGoalsCard() {
     };
   }, [open]);
 
-  async function handleSave() {
-    if (!mainGoal.trim()) {
-      setError("Напишите цель — хотя бы одной фразой.");
-      return;
-    }
-    setSaving(true);
+  async function run(action: () => Promise<{ ok: boolean; error?: string }>) {
+    setBusy(true);
     setError("");
-    const result = await saveMyGoal(mainGoal, context);
-    setSaving(false);
-    if (result.ok) setEditing(false);
-    else setError(result.error ?? "Не удалось сохранить.");
+    const result = await action();
+    setBusy(false);
+    if (!result.ok) setError(result.error ?? "Не получилось. Попробуй ещё раз.");
+    return result.ok;
   }
 
-  const hasMyGoal = Boolean(myGoal?.mainGoal);
+  async function handleAdd() {
+    if (!draft.trim()) return;
+    const ok = await run(() => addGoal(draft));
+    if (ok) setDraft("");
+  }
+
+  const myItems = myGoals?.items ?? [];
+  const doneCount = myItems.filter((item) => item.status === "done").length;
 
   return (
     <>
@@ -66,12 +79,16 @@ export default function CohortGoalsCard() {
           <h2 className="font-semibold text-[#18181b]">Цели на буткемп</h2>
         </div>
         <p className="text-sm text-[#71717a] leading-relaxed">
-          {hasMyGoal
-            ? "Твоя цель и цели остальных участников потока."
-            : "Сформулируй свою цель на буткемп и посмотри цели остальных."}
+          {myItems.length > 0
+            ? "Твои цели и цели остальных участников потока."
+            : "Запиши, чего хочешь добиться за буткемп. Целей может быть несколько."}
         </p>
         <span className="mt-1 inline-flex self-start items-center rounded-full bg-[#4f46e5]/10 text-[#4f46e5] text-xs font-medium px-2.5 py-1">
-          {loading ? "Загружаем..." : hasMyGoal ? `${goals.length} участников` : "Цель не заполнена"}
+          {loading
+            ? "Загружаем..."
+            : myItems.length > 0
+              ? `Мои цели: ${doneCount} из ${myItems.length}`
+              : "Целей пока нет"}
         </span>
       </button>
 
@@ -86,121 +103,145 @@ export default function CohortGoalsCard() {
           >
             <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
               <h3 className="font-semibold text-[#18181b]">Цели на буткемп</h3>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="text-zinc-400 hover:text-zinc-700"
-              >
+              <button type="button" onClick={() => setOpen(false)} className="text-zinc-400 hover:text-zinc-700">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="px-6 py-5 space-y-5">
+            <div className="px-6 py-5 space-y-6">
               <section className="rounded-lg border border-[#4f46e5]/30 bg-[#4f46e5]/5 p-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-[#18181b]">Моя цель</h4>
-                  {hasMyGoal && !editing && (
-                    <button
-                      type="button"
-                      onClick={() => setEditing(true)}
-                      className="inline-flex items-center gap-1.5 text-xs text-[#4f46e5] hover:underline"
-                    >
-                      <Pencil size={12} />
-                      Изменить
-                    </button>
-                  )}
-                </div>
+                <h4 className="text-sm font-semibold text-[#18181b]">Мои цели</h4>
 
-                {hasMyGoal && !editing ? (
-                  <>
-                    {myGoal?.context && (
-                      <p className="mt-1 text-xs text-zinc-500">{myGoal.context}</p>
-                    )}
-                    <p className="mt-2 text-sm text-zinc-700">{myGoal?.mainGoal}</p>
-                  </>
-                ) : (
-                  <div className="mt-3 space-y-3">
-                    <div>
-                      <label className="text-xs text-zinc-500">Чем занимаешься</label>
-                      <input
-                        value={context}
-                        onChange={(e) => setContext(e.target.value)}
-                        placeholder="Например: маркетолог в B2B SaaS"
-                        className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-zinc-500">
-                        Что хочешь получить к концу буткемпа
-                      </label>
-                      <textarea
-                        value={mainGoal}
-                        onChange={(e) => setMainGoal(e.target.value)}
-                        rows={3}
-                        placeholder="Конкретно: какую свою задачу передашь агенту и что считается результатом"
-                        className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
-                      />
-                    </div>
-                    {error && <p className="text-xs text-[#dc2626]">{error}</p>}
-                    <div className="flex gap-2">
+                <div className="mt-3">
+                  <label className="text-xs text-zinc-500">Чем занимаешься</label>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      value={context}
+                      onChange={(e) => {
+                        setContext(e.target.value);
+                        setContextDirty(true);
+                      }}
+                      placeholder="Например: маркетолог в B2B SaaS"
+                      className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+                    />
+                    {contextDirty && (
                       <button
                         type="button"
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="rounded-md bg-[#4f46e5] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
+                        disabled={busy}
+                        onClick={async () => {
+                          const ok = await run(() => saveContext(context));
+                          if (ok) setContextDirty(false);
+                        }}
+                        className="rounded-md bg-[#4f46e5] px-3 text-xs font-medium text-white disabled:opacity-60"
                       >
-                        {saving ? "Сохраняем..." : "Сохранить"}
+                        <Check size={14} />
                       </button>
-                      {hasMyGoal && (
+                    )}
+                  </div>
+                </div>
+
+                {myItems.length > 0 && (
+                  <ul className="mt-4 space-y-2">
+                    {myItems.map((item) => (
+                      <li key={item.id} className="flex items-start gap-2 rounded-md bg-white px-3 py-2">
                         <button
                           type="button"
-                          onClick={() => setEditing(false)}
-                          className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs text-zinc-600"
+                          disabled={busy}
+                          title={STATUS_META[item.status].label}
+                          onClick={() => run(() => updateGoal(item.id, { status: NEXT_STATUS[item.status] }))}
+                          className={`mt-0.5 shrink-0 text-sm ${STATUS_META[item.status].className}`}
                         >
-                          Отмена
+                          {STATUS_META[item.status].icon}
                         </button>
-                      )}
-                    </div>
-                  </div>
+                        <span
+                          className={`flex-1 text-sm ${
+                            item.status === "done" || item.status === "dropped"
+                              ? "text-zinc-400 line-through"
+                              : "text-zinc-700"
+                          }`}
+                        >
+                          {item.week ? (
+                            <span className="text-zinc-400">Неделя {item.week}: </span>
+                          ) : null}
+                          {item.text}
+                          {item.source === "transcript" && (
+                            <span className="ml-2 rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">
+                              с разбора
+                            </span>
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => run(() => deleteGoal(item.id))}
+                          className="mt-0.5 shrink-0 text-zinc-300 hover:text-[#dc2626]"
+                          title="Удалить"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 )}
+
+                <div className="mt-3 flex gap-2">
+                  <input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void handleAdd();
+                    }}
+                    placeholder="Ещё одна цель — что конкретно хочешь получить"
+                    className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAdd}
+                    disabled={busy || !draft.trim()}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-[#4f46e5] px-3 py-2 text-xs font-medium text-white disabled:opacity-60"
+                  >
+                    <Plus size={14} />
+                    Добавить
+                  </button>
+                </div>
+
+                {error && <p className="mt-2 text-xs text-[#dc2626]">{error}</p>}
+                <p className="mt-2 text-xs text-zinc-400">
+                  Клик по значку слева меняет статус: запланирована, в работе, сделана, снята.
+                </p>
               </section>
 
               <section>
                 <h4 className="text-sm font-semibold text-[#18181b]">Цели потока</h4>
                 {loading ? (
                   <p className="mt-2 text-sm text-zinc-500">Загружаем...</p>
-                ) : goals.filter((goal) => goal.userId !== myGoal?.userId).length === 0 ? (
+                ) : otherGoals.length === 0 ? (
                   <p className="mt-2 text-sm text-zinc-500">
-                    Пока никто больше не заполнил цель. Будь первым — остальные подтянутся.
+                    Пока никто больше не записал цели. Будь первым — остальные подтянутся.
                   </p>
                 ) : (
                   <div className="mt-3 space-y-4">
-                    {goals
-                      .filter((goal) => goal.userId !== myGoal?.userId)
-                      .map((goal) => (
-                        <div key={goal.userId} className="rounded-lg border border-zinc-200 p-4">
-                          <p className="text-sm font-medium text-[#18181b]">{goal.name}</p>
-                          {goal.context && (
-                            <p className="text-xs text-zinc-500">{goal.context}</p>
-                          )}
-                          <p className="mt-2 text-sm text-zinc-700">{goal.mainGoal}</p>
-                          {goal.weekly.length > 0 && (
-                            <ul className="mt-3 space-y-1.5">
-                              {goal.weekly.map((week) => (
-                                <li key={week.week} className="flex gap-2 text-xs text-zinc-600">
-                                  <span className={STATUS_META[week.status]?.className}>
-                                    {STATUS_META[week.status]?.icon ?? "•"}
-                                  </span>
-                                  <span>
-                                    <span className="text-zinc-400">Неделя {week.week}:</span>{" "}
-                                    {week.text}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
+                    {otherGoals.map((goal) => (
+                      <div key={goal.userId} className="rounded-lg border border-zinc-200 p-4">
+                        <p className="text-sm font-medium text-[#18181b]">{goal.name}</p>
+                        {goal.context && <p className="text-xs text-zinc-500">{goal.context}</p>}
+                        <ul className="mt-2 space-y-1.5">
+                          {goal.items.map((item) => (
+                            <li key={item.id} className="flex gap-2 text-sm text-zinc-700">
+                              <span className={`shrink-0 ${STATUS_META[item.status].className}`}>
+                                {STATUS_META[item.status].icon}
+                              </span>
+                              <span>
+                                {item.week ? (
+                                  <span className="text-zinc-400">Неделя {item.week}: </span>
+                                ) : null}
+                                {item.text}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
                   </div>
                 )}
               </section>

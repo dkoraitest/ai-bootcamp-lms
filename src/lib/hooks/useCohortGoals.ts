@@ -5,24 +5,28 @@ import { createClient } from "@/lib/supabase/client";
 import { useCohort } from "@/lib/cohort/CohortProvider";
 import { useUser } from "@/lib/hooks/useUser";
 
-export type WeeklyGoal = {
-  week: number;
+export type GoalStatus = "planned" | "in_progress" | "done" | "dropped";
+
+export type GoalItem = {
+  id: string;
   text: string;
-  status: "done" | "missed" | "in_progress";
+  week: number | null;
+  status: GoalStatus;
+  source: "self" | "transcript";
 };
 
 export type CohortGoal = {
   userId: string;
   name: string;
   context: string;
-  mainGoal: string;
-  weekly: WeeklyGoal[];
-  source: "self" | "transcript";
+  items: GoalItem[];
   updatedAt: string;
 };
 
-// Цели участников активного потока. Пустые записи RPC не отдаёт, поэтому
-// список — это те, кто цель уже сформулировал.
+type Result = { ok: boolean; error?: string };
+
+// Цели участников активного потока. У каждого список: свои цели он ведёт
+// сам, цели из разбора встреч добавляет преподаватель.
 export function useCohortGoals() {
   const { activeCohortId } = useCohort();
   const { user } = useUser();
@@ -53,9 +57,7 @@ export function useCohortGoals() {
           userId: row.user_id as string,
           name: (row.name as string) ?? "Участник",
           context: (row.context as string) ?? "",
-          mainGoal: (row.main_goal as string) ?? "",
-          weekly: (row.weekly as WeeklyGoal[]) ?? [],
-          source: (row.source as CohortGoal["source"]) ?? "self",
+          items: ((row.items as GoalItem[]) ?? []).filter((item) => item?.id),
           updatedAt: row.updated_at as string,
         }))
       );
@@ -68,26 +70,58 @@ export function useCohortGoals() {
     void load();
   }, [load]);
 
-  const saveMyGoal = useCallback(
-    async (mainGoal: string, context: string): Promise<{ ok: boolean; error?: string }> => {
-      if (!activeCohortId) return { ok: false, error: "Поток ещё загружается." };
-
+  const call = useCallback(
+    async (fn: string, params: Record<string, unknown>): Promise<Result> => {
       const supabase = createClient();
-      const { error: rpcError } = await supabase.rpc("set_my_goal", {
-        p_cohort_id: activeCohortId,
-        p_main_goal: mainGoal,
-        p_context: context,
-      });
-
-      if (rpcError) return { ok: false, error: `Не удалось сохранить: ${rpcError.message}` };
-
+      const { error: rpcError } = await supabase.rpc(fn, params);
+      if (rpcError) return { ok: false, error: rpcError.message };
       await load();
       return { ok: true };
     },
-    [activeCohortId, load]
+    [load]
   );
 
-  const myGoal = goals.find((goal) => goal.userId === user?.id) ?? null;
+  const addGoal = useCallback(
+    (text: string, week: number | null = null) => {
+      if (!activeCohortId) return Promise.resolve({ ok: false, error: "Поток ещё загружается." });
+      return call("add_my_goal", { p_cohort_id: activeCohortId, p_text: text, p_week: week });
+    },
+    [activeCohortId, call]
+  );
 
-  return { goals, myGoal, loading, error, saveMyGoal, reload: load };
+  const updateGoal = useCallback(
+    (id: string, patch: { text?: string; status?: GoalStatus }) =>
+      call("update_my_goal", {
+        p_goal_id: id,
+        p_text: patch.text ?? null,
+        p_status: patch.status ?? null,
+      }),
+    [call]
+  );
+
+  const deleteGoal = useCallback((id: string) => call("delete_my_goal", { p_goal_id: id }), [call]);
+
+  const saveContext = useCallback(
+    (context: string) => {
+      if (!activeCohortId) return Promise.resolve({ ok: false, error: "Поток ещё загружается." });
+      return call("set_my_goal_context", { p_cohort_id: activeCohortId, p_context: context });
+    },
+    [activeCohortId, call]
+  );
+
+  const myGoals = goals.find((goal) => goal.userId === user?.id) ?? null;
+  const otherGoals = goals.filter((goal) => goal.userId !== user?.id);
+
+  return {
+    goals,
+    myGoals,
+    otherGoals,
+    loading,
+    error,
+    addGoal,
+    updateGoal,
+    deleteGoal,
+    saveContext,
+    reload: load,
+  };
 }
