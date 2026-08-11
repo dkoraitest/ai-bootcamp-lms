@@ -259,7 +259,10 @@ export default function HomePage() {
 
         <QuickLinks />
 
-        <BootcampGoalsCard />
+        {/* Цели собраны из встреч первого потока и лежат в коде, не в базе.
+            Второму потоку показывать нельзя: это имена, должности и рабочие
+            задачи чужих людей, которые сдавали их не для показа следующим. */}
+        {activeCohortId === "flow-1" && <BootcampGoalsCard />}
       </div>
     </div>
   );
