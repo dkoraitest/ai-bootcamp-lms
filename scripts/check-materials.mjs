@@ -54,7 +54,7 @@ async function signIn() {
     console.error("или переменные LMS_CHECK_EMAIL и LMS_CHECK_PASSWORD.");
     process.exit(1);
   }
-  const response = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+  const response = await fetchWithRetry(`${url}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: { apikey: key, "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -68,7 +68,7 @@ async function signIn() {
 }
 
 async function loadMaterials(token) {
-  const settings = await fetch(
+  const settings = await fetchWithRetry(
     `${url}/rest/v1/cohort_material_settings?cohort_id=eq.${cohortId}&is_visible=eq.true&select=material_id,url`,
     { headers: { apikey: key, Authorization: `Bearer ${token}` } }
   ).then((r) => r.json());
@@ -79,7 +79,7 @@ async function loadMaterials(token) {
   }
 
   const ids = settings.map((row) => row.material_id).join(",");
-  const materials = await fetch(
+  const materials = await fetchWithRetry(
     `${url}/rest/v1/materials?id=in.(${ids})&select=id,title,type,url`,
     { headers: { apikey: key, Authorization: `Bearer ${token}` } }
   ).then((r) => r.json());
@@ -98,6 +98,21 @@ async function loadMaterials(token) {
 
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
+// Сеть до Google и Supabase иногда отваливается по таймауту. Без обёртки
+// один такой обрыв ронял весь прогон и отчёта не было вовсе.
+async function fetchWithRetry(target, options = {}, attempts = 3) {
+  let lastError;
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      return await fetch(target, { ...options, signal: AbortSignal.timeout(20000) });
+    } catch (error) {
+      lastError = error;
+      await sleep(1500 * (i + 1));
+    }
+  }
+  throw lastError;
+}
+
 // Проверяем по очереди с паузой: пачка параллельных запросов ловит 429
 // от GitHub, и живая ссылка попадает в отчёт как мёртвая.
 async function checkAll(items) {
@@ -115,9 +130,23 @@ async function checkAll(items) {
 }
 
 async function check(material) {
-  const target = material.link.startsWith("/") ? site + material.link : material.link;
+  const local = material.link.startsWith("/");
+  const target = local ? site + material.link : material.link;
   try {
-    const response = await fetch(target, {
+    // Файлы самой платформы закрыты middleware: неавторизованного он уводит
+    // на /login. Идти по редиректу нельзя — страница входа отдаёт 200 и
+    // выглядит как успех. Для участника, который уже вошёл, файл доступен.
+    if (local) {
+      const response = await fetchWithRetry(target, { redirect: "manual" });
+      if (response.status === 200) return { ...material, verdict: "открывается", ok: true };
+      const location = response.headers.get("location") ?? "";
+      if (response.status >= 300 && response.status < 400 && location.includes("/login")) {
+        return { ...material, verdict: "для вошедших", ok: true };
+      }
+      return { ...material, verdict: `HTTP ${response.status}`, ok: false };
+    }
+
+    const response = await fetchWithRetry(target, {
       redirect: "follow",
       headers: { "User-Agent": "Mozilla/5.0 (Macintosh) AppleWebKit/537.36 Chrome/120 Safari/537.36" },
     });
@@ -130,7 +159,7 @@ async function check(material) {
     }
     return { ...material, verdict: "открывается", ok: true };
   } catch (error) {
-    return { ...material, verdict: error.name ?? "ошибка сети", ok: false };
+    return { ...material, verdict: error?.name === "TimeoutError" ? "таймаут сети" : "ошибка сети", ok: false };
   }
 }
 
