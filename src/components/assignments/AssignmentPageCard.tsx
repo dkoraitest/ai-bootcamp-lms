@@ -5,6 +5,7 @@ import { ChevronDown, CheckCircle2, Circle, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useCohort } from "@/lib/cohort/CohortProvider";
 import { type HwMaterial } from "@/lib/program/hwMaterials";
+import { getAssignmentSubmissionFields, isAssignmentSubmitDisabled } from "@/lib/program/submission";
 
 const MATERIAL_EMOJI: Record<HwMaterial["type"], string> = {
   video: "📹",
@@ -120,6 +121,14 @@ export default function AssignmentPageCard({
   const tabs = isExpert ? EXPERT_TABS : STUDENT_TABS;
 
   const [isOpen, setIsOpen] = useState(false);
+  useEffect(() => {
+    const openLinkedAssignment = () => {
+      if (window.location.hash === `#hw-${assignment.hwNumber}` && (assignment.status !== "locked" || isExpert)) setIsOpen(true);
+    };
+    openLinkedAssignment();
+    window.addEventListener("hashchange", openLinkedAssignment);
+    return () => window.removeEventListener("hashchange", openLinkedAssignment);
+  }, [assignment.hwNumber, assignment.status, isExpert]);
   const [activeTab, setActiveTab] = useState<number>(0);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(assignment.checklist);
 
@@ -177,12 +186,7 @@ export default function AssignmentPageCard({
   }
 
   function isSubmitDisabled() {
-    const hw = assignment.hwNumber;
-    if (hw === 1 || hw === 3) return !githubUrl.trim();
-    if (hw === 2) return !liveUrl.trim() || !githubUrl.trim();
-    if (hw === 4 || hw === 6) return !videoUrl.trim();
-    if (hw === 5) return !githubUrl.trim() || !videoUrl.trim() || !artifact.trim();
-    return false;
+    return isAssignmentSubmitDisabled(activeCohortId, assignment.hwNumber, { githubUrl, videoUrl, liveUrl, artifact });
   }
 
   async function handleStudentSubmit() {
@@ -247,6 +251,7 @@ export default function AssignmentPageCard({
 
   return (
     <div
+      id={`hw-${assignment.hwNumber}`}
       className={`overflow-hidden rounded-[8px] border border-[#e4e4e7] bg-white shadow-sm ${cfg.headerCls}`}
     >
       <button
@@ -472,6 +477,22 @@ export default function AssignmentPageCard({
                 </div>
               ) : (
                 <div className="space-y-3">
+                  {activeCohortId === "flow-2" ? getAssignmentSubmissionFields(assignment.hwNumber).map((field) => {
+                    const fieldId = `hw-${assignment.hwNumber}-${field.key}`;
+                    const value = { githubUrl, videoUrl, liveUrl, artifact }[field.key];
+                    const setValue = { githubUrl: setGithubUrl, videoUrl: setVideoUrl, liveUrl: setLiveUrl, artifact: setArtifact }[field.key];
+                    const fieldClass = "w-full rounded-[4px] border border-[#e4e4e7] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#2563eb]";
+                    return (
+                      <div key={field.key}>
+                        <label htmlFor={fieldId} className="mb-1 block text-xs font-medium text-zinc-700">{field.label}{field.required ? " *" : ""}</label>
+                        {field.multiline ? (
+                          <textarea id={fieldId} value={value} onChange={(event) => setValue(event.target.value)} rows={7} required={field.required} placeholder="Что сделано, чем проверено и что осталось; ссылки без секретов и персональных данных" className={`${fieldClass} resize-y`} />
+                        ) : (
+                          <input id={fieldId} type="url" value={value} onChange={(event) => setValue(event.target.value)} required={field.required} placeholder="https://..." className={fieldClass} />
+                        )}
+                      </div>
+                    );
+                  }) : <>
                   {(assignment.hwNumber === 1 ||
                     assignment.hwNumber === 2 ||
                     assignment.hwNumber === 3 ||
@@ -536,6 +557,7 @@ export default function AssignmentPageCard({
                       />
                     </div>
                   )}
+                  </>}
 
                   {submitError && <p className="text-sm text-red-600">{submitError}</p>}
                   {submitNotice && <p className="text-sm text-[#16a34a]">{submitNotice}</p>}

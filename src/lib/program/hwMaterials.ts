@@ -16,6 +16,16 @@ export const HW_MATERIAL_IDS: Record<number, number[]> = {
   7: [],
 };
 
+const FLOW2_HW_MATERIAL_IDS = {
+  ...HW_MATERIAL_IDS,
+  4: [17, 47, 25, 55],
+  5: [90001, 90002, 90003, 90004, 110, 26, 39],
+};
+
+export function getHwMaterialIds(cohortId: string | null): Record<number, number[]> {
+  return cohortId === "flow-2" ? FLOW2_HW_MATERIAL_IDS : HW_MATERIAL_IDS;
+}
+
 export type HwMaterial = {
   id: number;
   title: string;

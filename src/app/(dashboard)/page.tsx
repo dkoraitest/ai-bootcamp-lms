@@ -13,6 +13,8 @@ import { useUser } from "@/lib/hooks/useUser";
 import { useStudentData } from "@/lib/hooks/useStudentData";
 import { useCohort } from "@/lib/cohort/CohortProvider";
 import { useCohortSchedule } from "@/lib/hooks/useContentUrls";
+import { getProgramAssignments } from "@/lib/program/assignments";
+import WeekFiveNotice from "@/components/program/WeekFiveNotice";
 
 // Запасная программа: даты, время и темы приходят из расписания потока
 // и перекрывают эти значения. Здесь — программа второго потока.
@@ -76,7 +78,8 @@ export default function HomePage() {
     .filter((lesson) => lesson.source || lesson.title_override);
   const nextLessonData = releasedLessons.find((lesson) => lesson.date >= today) ?? releasedLessons.at(-1);
 
-  const deadlineByNumber = new Map(DEADLINES_SCHEDULE.map((deadline) => [deadline.hwNumber, deadline]));
+  const deadlineContent = activeCohortId === "flow-2" ? getProgramAssignments(activeCohortId) : DEADLINES_SCHEDULE;
+  const deadlineByNumber = new Map(deadlineContent.map((deadline) => [deadline.hwNumber, deadline]));
   const releasedDeadlines = assignmentSchedule
     .filter((assignment) => assignment.is_released && assignment.deadline)
     .map((assignment) => ({
@@ -210,6 +213,7 @@ export default function HomePage() {
         </p>
       </div>
 
+      <WeekFiveNotice cohortId={activeCohortId} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <NextStepBanner
           hwCompleted={hwCompleted}

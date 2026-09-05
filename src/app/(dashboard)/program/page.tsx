@@ -10,6 +10,8 @@ import { useCohortSchedule, useAssignmentMaterials } from "@/lib/hooks/useConten
 import { useUser } from "@/lib/hooks/useUser";
 import { useCohort } from "@/lib/cohort/CohortProvider";
 import { createClient } from "@/lib/supabase/client";
+import { getProgramAssignmentCards } from "@/lib/program/assignments";
+import WeekFiveNotice from "@/components/program/WeekFiveNotice";
 
 type SubmissionRow = {
   assignment_id: number;
@@ -248,6 +250,12 @@ export default function ProgramPage() {
   const materialsByHw = useAssignmentMaterials();
   const { user } = useUser();
   const { activeCohortId, isPrivileged } = useCohort();
+  const assignmentContent = activeCohortId === "flow-2" ? getProgramAssignmentCards(activeCohortId) : ASSIGNMENTS;
+  const techniques = activeCohortId === "flow-2" ? {
+    ...TECHNIQUES,
+    8: ["Secrets, Data, Actions: три группы риска", "Аудит учебного проекта без изменений", "Инструкции и механизм блокирования: разница", "Проверка сторонних skills"],
+    9: ["Полезный результат и разрешённый вход", "Агент-исполнитель или создатель инструмента", "Постановка, запуск и разбор затруднений", "Проверка результата и следующий шаг"],
+  } : TECHNIQUES;
   const [submissionsByHw, setSubmissionsByHw] = useState<
     Record<number, SubmissionRow>
   >({});
@@ -350,7 +358,7 @@ export default function ProgramPage() {
   const scheduleByLesson = new Map(lessonSchedule.map((row) => [row.lesson_number, row]));
   const scheduleByHw = new Map(assignmentSchedule.map((row) => [row.hw_number, row]));
   const assignments: Record<number, AssignmentData> = Object.fromEntries(
-    Object.entries(ASSIGNMENTS)
+    Object.entries(assignmentContent)
       // Неопубликованное ДЗ студент не видит и в программе тоже — иначе
       // «скрыть» в админке прячет его на одном экране и оставляет на другом.
       .filter(([, a]) => {
@@ -371,13 +379,18 @@ export default function ProgramPage() {
         : "Дата уточняется";
       const materials = materialsByHw[a.hwNumber];
       const sub = submissionsByHw[a.hwNumber];
-      if (!sub) return [lessonId, { ...a, deadline, materials }];
+      const daysLeft = schedule?.deadline
+        ? Math.max(0, Math.ceil((new Date(schedule.deadline).getTime() - Date.now()) / 86400000))
+        : 0;
+      const currentDaysLeft = activeCohortId === "flow-2" ? daysLeft : a.daysLeft;
+      if (!sub) return [lessonId, { ...a, deadline, materials, daysLeft: currentDaysLeft }];
       return [
         lessonId,
         {
           ...a,
           deadline,
           materials,
+          daysLeft: currentDaysLeft,
           status: sub.status,
           githubUrl: sub.github_url ?? a.githubUrl,
           videoUrl: sub.video_url ?? a.videoUrl,
@@ -461,6 +474,7 @@ export default function ProgramPage() {
       </div>
 
       <ProgramProgressBar completed={completedCount} total={lessons.length} />
+      <WeekFiveNotice cohortId={activeCohortId} />
 
       <div className="flex flex-col gap-3">
         {weeks.map((week) => (
@@ -469,7 +483,7 @@ export default function ProgramPage() {
             weekNumber={week}
             theme={WEEK_THEMES[week]}
             lessons={lessons.filter((l) => l.week === week)}
-            techniques={TECHNIQUES}
+            techniques={techniques}
             assignments={assignments}
             defaultOpen={week === 1}
             onStatusChange={handleStatusChange}

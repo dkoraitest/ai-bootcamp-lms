@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { type HwMaterial } from "@/lib/program/hwMaterials";
 
@@ -31,6 +32,7 @@ export type AssignmentData = {
   githubUrl: string;
   videoUrl: string;
   materials?: HwMaterial[];
+  submissionHref?: string;
 };
 
 type Props = {
@@ -213,6 +215,13 @@ export default function AssignmentCard({ assignment }: Props) {
                       Видео-демо
                     </a>
                   )}
+                </div>
+              ) : assignment.submissionHref ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-zinc-600">Сдайте работу в разделе домашних заданий: там сохраняются ссылки, описание результата и статус проверки.</p>
+                  <Link href={assignment.submissionHref} className="inline-block rounded-md bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white">
+                    Перейти к сдаче ДЗ {assignment.hwNumber}
+                  </Link>
                 </div>
               ) : (
                 <div className="space-y-3">

@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { type Material } from "@/components/materials/MaterialCard";
 import { useCohort } from "@/lib/cohort/CohortProvider";
-import { HW_MATERIAL_IDS, type HwMaterial } from "@/lib/program/hwMaterials";
+import { getHwMaterialIds, type HwMaterial } from "@/lib/program/hwMaterials";
+import { getLocalCourseMaterials } from "@/lib/program/flow2Materials";
 
 export type CohortLessonSchedule = {
   lesson_number: number;
@@ -122,19 +123,21 @@ export function useMaterials(): { data: Material[]; loading: boolean } {
     };
   }, [activeCohortId]);
 
-  return { data, loading };
+  const courseMaterials = useMemo(() => [...data, ...getLocalCourseMaterials(activeCohortId)], [activeCohortId, data]);
+  return { data: courseMaterials, loading };
 }
 
 // Материалы, разложенные по номерам ДЗ: карточка задания показывает их
 // ссылками, чтобы артефакт открывался из самого задания.
 export function useAssignmentMaterials(): Record<number, HwMaterial[]> {
   const { data } = useMaterials();
+  const { activeCohortId } = useCohort();
 
   return useMemo(() => {
     const byId = new Map(data.map((material) => [material.id, material]));
     const result: Record<number, HwMaterial[]> = {};
 
-    for (const [hwNumber, materialIds] of Object.entries(HW_MATERIAL_IDS)) {
+    for (const [hwNumber, materialIds] of Object.entries(getHwMaterialIds(activeCohortId))) {
       const items = materialIds
         .map((id) => byId.get(id))
         .filter((material): material is Material => Boolean(material?.url))
@@ -149,7 +152,7 @@ export function useAssignmentMaterials(): Record<number, HwMaterial[]> {
     }
 
     return result;
-  }, [data]);
+  }, [activeCohortId, data]);
 }
 
 export function useCohortSchedule() {

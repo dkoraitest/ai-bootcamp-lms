@@ -16,7 +16,9 @@ import { useUser } from "@/lib/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 import { useCohort } from "@/lib/cohort/CohortProvider";
 import { useCohortSchedule, useAssignmentMaterials } from "@/lib/hooks/useContentUrls";
-import { PROGRAM_ASSIGNMENTS as INITIAL_ASSIGNMENTS } from "@/lib/program/assignments";
+import { getProgramAssignments } from "@/lib/program/assignments";
+import WeekFiveNotice from "@/components/program/WeekFiveNotice";
+import { getScheduledAssignmentStatus } from "@/lib/program/submission";
 
 type StudentSubmissionRow = {
   assignment_id: number;
@@ -107,13 +109,14 @@ function mapNotificationRow(row: NotificationRow): AssignmentNotification {
 export default function AssignmentsPage() {
   const { user } = useUser();
   const { activeCohortId, isPrivileged } = useCohort();
+  const initialAssignments = getProgramAssignments(activeCohortId);
   const { assignmentSchedule, loading: scheduleLoading } = useCohortSchedule();
   const materialsByHw = useAssignmentMaterials();
   const role = (user?.app_metadata as Record<string, unknown> | undefined)?.role;
   const isReviewer = isPrivileged || role === "expert" || role === "admin";
 
   const [filter, setFilter] = useState<FilterKey>("all");
-  const [assignments, setAssignments] = useState<AssignmentData[]>(INITIAL_ASSIGNMENTS);
+  const [assignments, setAssignments] = useState<AssignmentData[]>(initialAssignments);
   const [notifications, setNotifications] = useState<AssignmentNotification[]>([]);
   const [adminSubmissions, setAdminSubmissions] = useState<AdminSubmissionRow[]>([]);
   const [panelError, setPanelError] = useState("");
@@ -123,7 +126,7 @@ export default function AssignmentsPage() {
     let isCancelled = false;
 
     async function loadPageData() {
-      setAssignments(INITIAL_ASSIGNMENTS);
+      setAssignments(initialAssignments);
       setNotifications([]);
       setAdminSubmissions([]);
       setPanelError("");
@@ -168,7 +171,7 @@ export default function AssignmentsPage() {
       } else {
         setAssignments(
           mergeAssignmentsWithSubmissions(
-            INITIAL_ASSIGNMENTS,
+            initialAssignments,
             (submissions ?? []) as StudentSubmissionRow[]
           )
         );
@@ -190,7 +193,7 @@ export default function AssignmentsPage() {
     return () => {
       isCancelled = true;
     };
-  }, [activeCohortId, isReviewer, user?.id]);
+  }, [activeCohortId, initialAssignments, isReviewer, user?.id]);
 
   async function handleStudentSubmit(
     assignment: AssignmentData,
@@ -303,11 +306,8 @@ export default function AssignmentsPage() {
       .map((assignment) => {
       const schedule = scheduleByHw.get(assignment.hwNumber);
       const materials = materialsByHw[assignment.hwNumber];
+      const status = getScheduledAssignmentStatus(activeCohortId, assignment.status, Boolean(schedule?.is_released && schedule.deadline));
       if (!schedule?.is_released || !schedule.deadline) {
-        const status: AssignmentData["status"] =
-          assignment.status === "submitted" || assignment.status === "reviewed"
-            ? assignment.status
-            : "locked";
         return { ...assignment, materials, deadline: "Дата уточняется", daysLeft: 0, status };
       }
 
@@ -315,6 +315,7 @@ export default function AssignmentsPage() {
       return {
         ...assignment,
         materials,
+        status,
         deadline: deadline.toLocaleString("ru-RU", {
           day: "2-digit",
           month: "2-digit",
@@ -328,7 +329,7 @@ export default function AssignmentsPage() {
         ),
       };
     });
-  }, [assignmentSchedule, assignments, materialsByHw, scheduleLoading, isReviewer]);
+  }, [activeCohortId, assignmentSchedule, assignments, materialsByHw, scheduleLoading, isReviewer]);
 
   const counts = useMemo(() => {
     const result = {} as Record<FilterKey, number>;
@@ -364,7 +365,7 @@ export default function AssignmentsPage() {
         id: submission.id,
         hwNumber: submission.hw_number,
         title:
-          INITIAL_ASSIGNMENTS.find((assignment) => assignment.hwNumber === submission.hw_number)
+          initialAssignments.find((assignment) => assignment.hwNumber === submission.hw_number)
             ?.title ?? `ДЗ ${submission.hw_number}`,
         studentName: submission.student_name,
         studentEmail: submission.student_email,
@@ -377,7 +378,7 @@ export default function AssignmentsPage() {
         feedback: submission.feedback,
         pointsEarned: submission.points_earned,
       })),
-    [adminSubmissions]
+    [adminSubmissions, initialAssignments]
   );
 
   return (
@@ -395,6 +396,7 @@ export default function AssignmentsPage() {
       </div>
 
       <div className="flex flex-col gap-4">
+        <WeekFiveNotice cohortId={activeCohortId} />
         <AssignmentSummaryBar segments={segments} />
 
         {isReviewer ? (

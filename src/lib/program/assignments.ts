@@ -1,4 +1,6 @@
 import { type AssignmentData } from "@/components/assignments/AssignmentPageCard";
+import type { AssignmentData as ProgramCard } from "@/components/program/AssignmentCard";
+import { FLOW2_ASSIGNMENT_UPDATES } from "./flow2Assignments";
 
 // Домашние задания потока. Отдельным модулем, потому что нужны и разделу ДЗ,
 // и поиску: пока список был копией внутри страницы, поиск показывал задания
@@ -139,9 +141,9 @@ export const PROGRAM_ASSIGNMENTS: AssignmentData[] = [
   {
     id: 5,
     hwNumber: 5,
-    title: "Защищённый агент + зафиксированный кейс",
+    title: "Безопасность проекта + проверяемый срез кейса",
     lessonId: 9,
-    lessonTitle: "Урок 9 · Свой кейс: выбор и запуск",
+    lessonTitle: "Урок 9 · Память, safety proof и тонкий срез",
     deadline: "08.09.2026",
     status: "locked",
     points: 80,
@@ -152,16 +154,21 @@ export const PROGRAM_ASSIGNMENTS: AssignmentData[] = [
     artifact: "",
     submittedAt: null,
     description:
-      "Ограничить права агента двумя хуками и публично зафиксировать задачу, которая станет финальным проектом.",
+      "Довести практику Лайвов 8–9: провести read-only аудит проекта, поставить project-level guard и проверить его только на dummy-target. Затем выбрать один повторяющийся процесс и сделать 30-минутный тонкий срез на собственных обезличенных данных. Если acceptance check не проходит, сдать точный воспроизводимый blocker вместо расширения scope.",
     requirements: [
-      "Два хука установлены и проверены: rm -rf блокируется",
-      "Публично зафиксированный кейс в чате",
+      "SECURITY_REPORT.md с разделами Secrets, Data, Actions и Safe next action, без значений секретов",
+      "Project-level guard проходит dummy-тест: safe allowed, destructive blocked, dummy-target intact",
+      "CASE_BRIEF.md: один Input, один Output, Human gate, Acceptance check и scope 30 минут",
+      "Тонкий срез работает на собственных обезличенных данных или имеет точный воспроизводимый blocker",
+      "Короткое доказательство результата: ссылка, скриншот или output-файл без чувствительных данных",
     ],
     checklist: [
-      { id: 1, text: "Хук guard установлен, опасная команда блокируется", done: false },
-      { id: 2, text: "Хук log установлен и пишет", done: false },
-      { id: 3, text: "Security audit пройден", done: false },
-      { id: 4, text: "Кейс назван в общем чате", done: false },
+      { id: 1, text: "SECURITY_REPORT.md готов и не содержит значений секретов", done: false },
+      { id: 2, text: "Guard подключён в .claude/settings.json на уровне проекта", done: false },
+      { id: 3, text: "Direct validator подтвердил: safe allowed, destructive blocked, dummy-target intact", done: false },
+      { id: 4, text: "В CASE_BRIEF.md зафиксированы Input, Output, Human gate и Acceptance check", done: false },
+      { id: 5, text: "Scope 2 часа не начат до PASS scope 30 минут", done: false },
+      { id: 6, text: "Acceptance записан как PASS или воспроизводимый blocker", done: false },
     ],
     feedback: null,
   },
@@ -226,3 +233,29 @@ export const PROGRAM_ASSIGNMENTS: AssignmentData[] = [
     feedback: null,
   },
 ];
+
+const FLOW2_ASSIGNMENTS = PROGRAM_ASSIGNMENTS.map((assignment) => ({
+  ...assignment,
+  ...FLOW2_ASSIGNMENT_UPDATES[assignment.hwNumber],
+}));
+
+export function getProgramAssignments(cohortId: string | null): AssignmentData[] {
+  return cohortId === "flow-2" ? FLOW2_ASSIGNMENTS : PROGRAM_ASSIGNMENTS;
+}
+
+export function getProgramAssignmentCards(cohortId: string | null): Record<number, ProgramCard> {
+  return Object.fromEntries(getProgramAssignments(cohortId).map((assignment) => [assignment.lessonId, {
+    hwNumber: assignment.hwNumber,
+    title: assignment.title,
+    description: assignment.description,
+    deadline: assignment.deadline,
+    daysLeft: 0,
+    deliverables: assignment.requirements,
+    checklist: assignment.checklist.map((item) => item.text),
+    rubric: assignment.requirements.map((description, index) => ({ level: `Критерий ${index + 1}`, description })),
+    status: assignment.status === "locked" ? "not_started" : assignment.status,
+    githubUrl: assignment.githubUrl,
+    videoUrl: assignment.videoUrl,
+    submissionHref: `/assignments#hw-${assignment.hwNumber}`,
+  }]));
+}

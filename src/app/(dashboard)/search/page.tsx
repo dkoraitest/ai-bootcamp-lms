@@ -7,7 +7,8 @@ import SearchEmptyState from "@/components/search/SearchEmptyState";
 import SearchNoResults from "@/components/search/SearchNoResults";
 import { useCohortSchedule, useMaterials } from "@/lib/hooks/useContentUrls";
 import { PROGRAM_LESSONS } from "@/lib/program/lessons";
-import { PROGRAM_ASSIGNMENTS } from "@/lib/program/assignments";
+import { getProgramAssignments } from "@/lib/program/assignments";
+import { useCohort } from "@/lib/cohort/CohortProvider";
 
 
 const STORAGE_KEY = "lms_recent_searches";
@@ -21,6 +22,7 @@ type SearchResults = {
 };
 
 export default function SearchPage() {
+  const { activeCohortId } = useCohort();
   const [query, setQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -90,7 +92,7 @@ export default function SearchPage() {
       assignmentSchedule.filter((row) => row.is_released).map((row) => row.hw_number)
     );
     const deadlineByHw = new Map(assignmentSchedule.map((row) => [row.hw_number, row.deadline]));
-    const assignments: SearchItem[] = PROGRAM_ASSIGNMENTS.filter((hw) =>
+    const assignments: SearchItem[] = getProgramAssignments(activeCohortId).filter((hw) =>
       releasedHw.has(hw.hwNumber)
     ).map((hw) => {
       const deadline = deadlineByHw.get(hw.hwNumber);
@@ -109,7 +111,7 @@ export default function SearchPage() {
     });
 
     return [...lessons, ...materials, ...assignments];
-  }, [lessonSchedule, assignmentSchedule, cohortMaterials]);
+  }, [activeCohortId, lessonSchedule, assignmentSchedule, cohortMaterials]);
 
   const results = useMemo<SearchResults | null>(() => {
     if (query.trim().length < 2) return null;
