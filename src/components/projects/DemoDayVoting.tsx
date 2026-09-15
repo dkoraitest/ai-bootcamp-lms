@@ -7,7 +7,7 @@ import { ArrowLeft, Check, ChevronDown, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
 type Candidate = { candidate_key: string; display_name: string; is_self: boolean; scores: Ballot | null; updated_at: string | null };
-type VotingState = { viewer_key: string; is_open: boolean; can_manage: boolean; ready: boolean; candidates: Candidate[] };
+type VotingState = { viewer_key: string; is_open: boolean; can_manage: boolean; can_cast: boolean; voter_count: number; ready: boolean; candidates: Candidate[] };
 type Result = { candidate_key: string; display_name: string; vote_count: number; mean_total: number | null; mean_usefulness: number | null; mean_working: number | null; mean_understanding: number | null };
 const COHORT = 'flow-2';
 
@@ -135,7 +135,7 @@ function OrganizerPanel({ state, reload }: { state: VotingState; reload: () => P
   }
   return <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6" aria-label="Управление голосованием">
     <div className="flex flex-wrap items-start justify-between gap-4">
-      <div><h2 className="font-semibold text-slate-900">Для ведущих</h2><p className="mt-1 text-sm text-slate-600">Ваш голос имеет тот же вес, что и голос каждого участника.</p></div>
+      <div><h2 className="font-semibold text-slate-900">Для ведущих</h2><p className="mt-1 text-sm text-slate-600">{state.can_cast ? 'Ваш голос имеет тот же вес, что и голос каждого участника.' : 'Вы управляете голосованием, но голос не подаёте.'} Голосующих в списке: {state.voter_count}.</p></div>
       <button type="button" disabled={busy || (!state.is_open && !state.ready)} onClick={() => state.is_open ? setConfirmClose(true) : void toggle(true)}
         className="min-h-11 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 disabled:opacity-50">{state.is_open ? 'Закрыть голосование' : 'Открыть голосование'}</button>
     </div>
@@ -185,8 +185,10 @@ export function DemoDayVoting({ resultsOnly = false }: { resultsOnly?: boolean }
     {loading && !state ? <p role="status" className="rounded-xl bg-white p-6 text-slate-500">Загружаю голосование…</p> : error && !state ? <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5"><p className="text-sm text-red-800">{error}</p><button className="mt-3 rounded-lg bg-white px-4 py-2 text-sm" onClick={() => void reload()}>Попробовать снова</button></div> : state && <>
       {error && <div role="alert" className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{error} Показаны последние загруженные данные. Черновики сохранены.</div>}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4"><div><span className={`text-sm font-semibold ${state.is_open ? 'text-emerald-700' : 'text-slate-700'}`}>{state.is_open ? 'Голосование открыто' : 'Голосование закрыто'}</span><p className="mt-1 text-xs text-slate-500">Все голоса равны. Свой проект не оцениваем. «Не видел» не считается нулём.</p></div><button disabled={loading} className="inline-flex min-h-10 items-center gap-2 text-sm text-indigo-700 disabled:opacity-50" onClick={() => void reload()}><RefreshCw size={14} />Обновить статус</button></div>
-      {!resultsOnly && <details className="mb-6 rounded-xl border border-slate-200 bg-white p-4"><summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-slate-700">Подсказки к оценкам 0–3<ChevronDown size={16}/></summary><div className="mt-4 grid gap-5 sm:grid-cols-3">{DEMO_CRITERIA.map(c => <div key={c.key}><h2 className="mb-2 text-sm font-semibold">{c.title}</h2><ul className="space-y-2 text-xs leading-5 text-slate-600">{c.levels.map((l,i) => <li key={i}><strong>{i}</strong> — {l}</li>)}</ul></div>)}</div></details>}
-      <div className="space-y-4">{!resultsOnly && state.candidates.map(candidate => <CandidateCard key={`${state.viewer_key}:${COHORT}:${candidate.candidate_key}`} candidate={candidate} viewerKey={state.viewer_key} open={state.is_open} onSaved={onSaved} />)}
+      {!resultsOnly && state.can_cast && <details className="mb-6 rounded-xl border border-slate-200 bg-white p-4"><summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-slate-700">Подсказки к оценкам 0–3<ChevronDown size={16}/></summary><div className="mt-4 grid gap-5 sm:grid-cols-3">{DEMO_CRITERIA.map(c => <div key={c.key}><h2 className="mb-2 text-sm font-semibold">{c.title}</h2><ul className="space-y-2 text-xs leading-5 text-slate-600">{c.levels.map((l,i) => <li key={i}><strong>{i}</strong> — {l}</li>)}</ul></div>)}</div></details>}
+      <div className="space-y-4">{!resultsOnly && (state.can_cast
+        ? state.candidates.map(candidate => <CandidateCard key={`${state.viewer_key}:${COHORT}:${candidate.candidate_key}`} candidate={candidate} viewerKey={state.viewer_key} open={state.is_open} onSaved={onSaved} />)
+        : <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">Ваш аккаунт не в списке голосующих. Вы ведёте демо-день и видите результаты, но собственный голос не подаёте.</p>)}
       {state.can_manage ? <OrganizerPanel key={`${state.viewer_key}:results-${version}`} state={state} reload={reload} /> : resultsOnly && <p className="rounded-xl bg-white p-5 text-sm">Результаты доступны ведущим. <Link className="text-indigo-700 underline" href="/projects">Перейти к оценке проектов</Link></p>}</div>
     </>}
   </div></main>;
