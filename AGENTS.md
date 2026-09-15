@@ -1,5 +1,11 @@
 # Project Instructions: LMS Platform Bootcamp
 
+## Точка продолжения · 15.09.2026
+
+Перед новой работой прочитать [docs/current-status.md](docs/current-status.md). Там принятые правила демо-дня, подтверждённые аккаунты, граница local/production, проверки и следующий шаг. Голосование готово локально; 022/023, commit/push/deploy ещё не выполнены и ожидают подтверждения. `active/` и новые исходники есть только в текущем рабочем каталоге.
+
+Августовские статусы и открытые вопросы ниже исторические; для текущего состояния использовать указанный документ. Эта передача не меняет правила безопасности и разрешения на публикацию.
+
 ## Communication
 
 - Reply in Russian by default.
@@ -14,7 +20,7 @@
 - Do not delete or revert unrelated local changes.
 - Treat production Supabase as high risk. Prefer additive migrations first, then cleanup after verification.
 
-## Current Feature Plan: Multi-Cohort LMS
+## Historical Feature Plan: Multi-Cohort LMS (August 2026)
 
 Goal: add support for multiple course cohorts and a cohort switcher, while keeping all current flow-1 data unchanged and preventing flow-2 data from leaking to flow-1 students.
 
@@ -232,7 +238,7 @@ Verify:
 - flow-2 material policy is finalized: expose all flow-1 materials except rows whose `materials.description` starts with `Запись урока`; migrations `013-015` implement the final correction.
 - flow-2 schedule dates remain intentionally deferred; do not populate or display flow-1 dates as a fallback.
 
-## Product Decisions Still Needed
+## Historical Product Questions (August 2026)
 
 - Flow-2 schedule is not known yet. Until dates are added, flow-2 should show an empty or neutral schedule state, not flow-1 dates.
 - Decide materials mode for flow-2:
