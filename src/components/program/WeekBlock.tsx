@@ -88,6 +88,7 @@ export default function WeekBlock({
                   id={lesson.id}
                   date={lesson.date}
                   topic={lesson.topic}
+                  videoUrl={lesson.videoUrl}
                 />
               ) : (
                 <LessonCard
