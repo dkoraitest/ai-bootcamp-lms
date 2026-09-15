@@ -8,6 +8,7 @@ import Link from 'next/link';
 
 type Candidate = { candidate_key: string; display_name: string; is_self: boolean; scores: Ballot | null; updated_at: string | null };
 type VotingState = { viewer_key: string; is_open: boolean; can_manage: boolean; can_cast: boolean; is_test_voter: boolean; voter_count: number; ready: boolean; candidates: Candidate[] };
+type Voter = { user_id: string; display_name: string; is_test: boolean; ballots_cast: number; ballots_possible: number };
 type Result = { candidate_key: string; display_name: string; vote_count: number; mean_total: number | null; mean_usefulness: number | null; mean_working: number | null; mean_understanding: number | null; hw_submitted: number; hw_reviewed: number };
 const COHORT = 'flow-2';
 
@@ -29,7 +30,7 @@ function storeDraft(key: string, draft: DraftBallot | null) {
   } catch { /* Keep the in-memory draft if browser storage is unavailable. */ }
 }
 
-function CandidateCard({ candidate, viewerKey, open, onSaved }: { candidate: Candidate; viewerKey: string; open: boolean; onSaved: () => void }) {
+function CandidateCard({ candidate, viewerKey, open, onSaved, onBehalfOf }: { candidate: Candidate; viewerKey: string; open: boolean; onSaved: () => void; onBehalfOf?: string }) {
   const supabase = useMemo(() => createClient(), []);
   const storageKey = `lms.demoDayDraft.v1:${JSON.stringify([viewerKey, COHORT, candidate.candidate_key])}`;
   const [{ draft, saved, notice }, setBallot] = useState<{ draft: DraftBallot; saved: Ballot | null; notice: string }>(() => ({
@@ -55,9 +56,13 @@ function CandidateCard({ candidate, viewerKey, open, onSaved }: { candidate: Can
     setBusy(true); setError(''); setBallot(previous => ({ ...previous, notice: '' }));
     try {
       const payload = makeBallotPayload(candidate.candidate_key, draft, skip);
-      const { error: rpcError } = await supabase.rpc('save_demo_day_ballot', {
-        p_cohort_id: COHORT, p_candidate_key: payload.candidate_key, p_scores: payload.scores,
-      });
+      const { error: rpcError } = onBehalfOf
+        ? await supabase.rpc('save_demo_day_ballot_for', {
+          p_cohort_id: COHORT, p_candidate_key: payload.candidate_key, p_voter_id: onBehalfOf, p_scores: payload.scores,
+        })
+        : await supabase.rpc('save_demo_day_ballot', {
+          p_cohort_id: COHORT, p_candidate_key: payload.candidate_key, p_scores: payload.scores,
+        });
       if (rpcError) throw new Error(rpcError.message);
       setBallot({ saved: payload.scores, draft: payload.scores ?? { ...EMPTY_BALLOT },
         notice: skip ? 'Проект пропущен. Ноль не начисляется.' : 'Оценка сохранена. Пока голосование открыто, её можно изменить.' });
@@ -72,12 +77,12 @@ function CandidateCard({ candidate, viewerKey, open, onSaved }: { candidate: Can
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 font-semibold text-indigo-700" aria-hidden>{candidate.display_name.slice(0,1)}</span>
           <div><h2 className="text-lg font-semibold text-slate-900">{candidate.display_name}</h2>
-            <p className="text-xs text-slate-500">{candidate.is_self ? 'Ваш проект' : dirty ? 'Есть несохранённые изменения' : saved ? 'Ваша оценка сохранена' : 'Ещё не оценено'}</p>
+            <p className="text-xs text-slate-500">{candidate.is_self ? (onBehalfOf ? 'Его проект' : 'Ваш проект') : dirty ? 'Есть несохранённые изменения' : saved ? 'Ваша оценка сохранена' : 'Ещё не оценено'}</p>
           </div>
         </div>
         {!candidate.is_self && <span className="text-sm font-medium tabular-nums text-slate-600">{total === null ? '—' : total} / 9</span>}
       </div>
-      {candidate.is_self ? <p className="text-sm text-slate-600">За свой проект голосовать нельзя. Оцените выступления остальных участников.</p> : <>
+      {candidate.is_self ? <p className="text-sm text-slate-600">{onBehalfOf ? 'Это его собственный проект, оценивать нельзя.' : 'За свой проект голосовать нельзя. Оцените выступления остальных участников.'}</p> : <>
         <div className="grid gap-6 lg:grid-cols-3">
           {DEMO_CRITERIA.map((criterion) => <fieldset key={criterion.key} disabled={!open || busy}>
             <legend className="font-medium text-slate-900">{criterion.title}</legend>
@@ -107,6 +112,57 @@ function CandidateCard({ candidate, viewerKey, open, onSaved }: { candidate: Can
       </>}
     </article>
   );
+}
+
+function ProxyVoting({ isOpen }: { isOpen: boolean }) {
+  const supabase = useMemo(() => createClient(), []);
+  const [voters, setVoters] = useState<Voter[] | null>(null);
+  const [selected, setSelected] = useState('');
+  const [cards, setCards] = useState<Candidate[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const loadVoters = useCallback(async () => {
+    setBusy(true); setError('');
+    try {
+      const { data, error: rpcError } = await supabase.rpc('get_demo_day_voters', { p_cohort_id: COHORT });
+      if (rpcError) throw new Error(rpcError.message);
+      setVoters(data ?? []);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Не удалось загрузить список голосующих.'); }
+    finally { setBusy(false); }
+  }, [supabase]);
+  const loadCards = useCallback(async (voterId: string) => {
+    if (!voterId) { setCards(null); return; }
+    setBusy(true); setError('');
+    try {
+      const { data, error: rpcError } = await supabase.rpc('get_demo_day_state_for', { p_cohort_id: COHORT, p_voter_id: voterId });
+      if (rpcError) throw new Error(rpcError.message);
+      setCards(Array.isArray(data?.candidates) ? data.candidates : []);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Не удалось загрузить оценки этого голосующего.'); setCards(null); }
+    finally { setBusy(false); }
+  }, [supabase]);
+  const onSaved = useCallback(() => { void loadCards(selected); void loadVoters(); }, [loadCards, loadVoters, selected]);
+  const current = voters?.find(v => v.user_id === selected);
+  return <div className="mt-5 border-t border-slate-200 pt-4">
+    <details onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open && !voters) void loadVoters(); }}>
+      <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-indigo-700">
+        Проставить оценки за другого голосующего<ChevronDown size={16} />
+      </summary>
+      <p className="mt-3 text-xs leading-5 text-slate-500">Только если человек не может зайти сам. Оценка сохраняется от его имени, а в базе отмечается, что внесли её вы.</p>
+      {voters && <div className="mt-4">
+        <label className="block text-sm font-medium text-slate-700" htmlFor="proxy-voter">Голосующий</label>
+        <select id="proxy-voter" className="mt-2 min-h-11 w-full max-w-sm rounded-lg border border-slate-300 bg-white px-3 text-sm"
+          value={selected} disabled={busy} onChange={(e) => { setSelected(e.target.value); void loadCards(e.target.value); }}>
+          <option value="">Выберите человека</option>
+          {voters.map(v => <option key={v.user_id} value={v.user_id}>{v.display_name}{v.is_test ? ' (пробный)' : ''} — оценок {v.ballots_cast} из {v.ballots_possible}</option>)}
+        </select>
+      </div>}
+      {current?.is_test && <p className="mt-3 text-sm text-amber-800">Это пробный аккаунт: его оценки в результат не войдут.</p>}
+      {!isOpen && selected && <p className="mt-3 text-sm text-amber-800">Приём оценок закрыт, сохранить не получится.</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
+      {cards && <div className="mt-4 space-y-4">{cards.map(c => <CandidateCard key={`${selected}:${c.candidate_key}`}
+        candidate={c} viewerKey={`proxy:${selected}`} open={isOpen} onSaved={onSaved} onBehalfOf={selected} />)}</div>}
+    </details>
+  </div>;
 }
 
 function OrganizerPanel({ state, reload }: { state: VotingState; reload: () => Promise<void> }) {
@@ -141,6 +197,7 @@ function OrganizerPanel({ state, reload }: { state: VotingState; reload: () => P
     </div>
     {!state.ready && <p className="mt-3 text-sm text-amber-800">Перед открытием нужно подтвердить аккаунты всех пяти участников.</p>}
     {confirmClose && <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4"><p className="text-sm text-amber-900">Закрыть приём оценок? Несохранённые оценки после закрытия отправить не получится.</p><div className="mt-3 flex gap-3"><button disabled={busy} className="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white" onClick={() => void toggle(false)}>Да, закрыть</button><button disabled={busy} className="px-3 py-2 text-sm" onClick={() => setConfirmClose(false)}>Отмена</button></div></div>}
+    <ProxyVoting isOpen={state.is_open} />
     <div className="mt-5 border-t border-slate-200 pt-4">
       <button type="button" disabled={busy} onClick={() => void refresh()} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-indigo-700"><RefreshCw size={15} />{busy ? 'Загружаю…' : results ? 'Обновить результаты' : 'Показать результаты ведущим'}</button>
       <p className="text-xs leading-5 text-slate-500">{state.is_open ? 'Предварительные результаты: голосование ещё идёт.' : 'Приём оценок закрыт.'} Среднее суммы трёх критериев, максимум 9. ДЗ показаны справочно и к среднему не прибавляются.</p>
