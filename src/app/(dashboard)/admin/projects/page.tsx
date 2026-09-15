@@ -1,5 +1,6 @@
 'use client';
 
+import { DemoDayVoting } from '@/components/projects/DemoDayVoting';
 import { useUser } from '@/lib/hooks/useUser';
 import { useCohort } from '@/lib/cohort/CohortProvider';
 import { VotesResultsTable } from '@/components/projects/VotesResultsTable';
@@ -8,7 +9,7 @@ import Link from 'next/link';
 
 export default function AdminProjectsResultsPage() {
   const { loading: userLoading } = useUser();
-  const { isPrivileged, isLoading: cohortLoading } = useCohort();
+  const { activeCohortId, isPrivileged, isLoading: cohortLoading } = useCohort();
   const loading = userLoading || cohortLoading;
   const isAuthorized = isPrivileged;
 
@@ -21,6 +22,8 @@ export default function AdminProjectsResultsPage() {
       </main>
     );
   }
+
+  if (activeCohortId === "flow-2") return <DemoDayVoting resultsOnly />;
 
   if (!isAuthorized) {
     return (

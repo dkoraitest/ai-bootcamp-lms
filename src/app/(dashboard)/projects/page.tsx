@@ -1,10 +1,15 @@
 'use client';
 
+import { useCohort } from '@/lib/cohort/CohortProvider';
+import { DemoDayVoting } from '@/components/projects/DemoDayVoting';
 import { ProjectVotingTable } from '@/components/projects/ProjectVotingTable';
 import { ArrowLeft, Vote } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProjectsPage() {
+  const { activeCohortId, isLoading } = useCohort();
+  if (isLoading) return <main className="p-8">Загружаю поток…</main>;
+  if (activeCohortId === "flow-2") return <DemoDayVoting />;
   return (
     <main className="flex-1 overflow-auto">
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
