@@ -141,7 +141,7 @@ export default function AdminSchedulePage() {
       ) : (
         <>
           <div className="bg-white border border-zinc-200 rounded-xl overflow-x-auto">
-            <table className="w-full text-sm min-w-[980px]">
+            <table className="w-full text-sm min-w-[1240px]">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-zinc-400 border-b border-zinc-100">
                   <th className="px-4 py-3 font-medium">Урок</th>
@@ -150,6 +150,7 @@ export default function AdminSchedulePage() {
                   <th className="px-4 py-3 font-medium">Название</th>
                   <th className="px-4 py-3 font-medium">Тема</th>
                   <th className="px-4 py-3 font-medium">Открыт</th>
+                  <th className="px-4 py-3 font-medium">Ссылка на запись</th>
                 </tr>
               </thead>
               <tbody>
@@ -199,6 +200,27 @@ export default function AdminSchedulePage() {
                         checked={row.isReleased}
                         onChange={(e) => patchLesson(index, { isReleased: e.target.checked })}
                       />
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={row.videoUrl ?? ""}
+                          onChange={(e) => {
+                            const videoUrl = e.target.value || null;
+                            patchLesson(index, { videoUrl, videoReleased: videoUrl ? true : row.videoReleased });
+                          }}
+                          placeholder="https://drive.google.com/..."
+                          className="w-full min-w-[220px] text-sm px-2 py-1 border border-zinc-200 rounded"
+                        />
+                        <label className="flex items-center gap-1 text-xs text-zinc-500 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={row.videoReleased}
+                            onChange={(e) => patchLesson(index, { videoReleased: e.target.checked })}
+                          />
+                          доступна
+                        </label>
+                      </div>
                     </td>
                   </tr>
                 ))}

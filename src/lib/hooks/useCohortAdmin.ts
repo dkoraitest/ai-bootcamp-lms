@@ -241,7 +241,7 @@ export function useCohortSchedule(cohortId: string | null) {
       setLoading(true);
       const supabase = createClient();
 
-      const [lessonsResult, assignmentsResult] = await Promise.all([
+      const [lessonsResult, assignmentsResult, settingsResult] = await Promise.all([
         supabase
           .from("cohort_lesson_schedule")
           .select("lesson_number, lesson_date, starts_at, title_override, topic_override, is_released")
@@ -252,23 +252,35 @@ export function useCohortSchedule(cohortId: string | null) {
           .select("hw_number, deadline, is_released")
           .eq("cohort_id", cohortId)
           .order("hw_number"),
+        supabase
+          .from("cohort_lesson_settings")
+          .select("lesson_number, video_url, is_released")
+          .eq("cohort_id", cohortId),
       ]);
 
       if (cancelled) return;
 
-      if (lessonsResult.error || assignmentsResult.error) {
+      if (lessonsResult.error || assignmentsResult.error || settingsResult.error) {
         setError("Не удалось загрузить расписание потока.");
       } else {
         setError("");
+        const settingsByLesson = new Map(
+          (settingsResult.data ?? []).map((row) => [row.lesson_number as number, row])
+        );
         setLessons(
-          (lessonsResult.data ?? []).map((row) => ({
-            lessonNumber: row.lesson_number as number,
-            lessonDate: (row.lesson_date as string) ?? null,
-            startsAt: (row.starts_at as string) ?? null,
-            titleOverride: (row.title_override as string) ?? null,
-            topicOverride: (row.topic_override as string) ?? null,
-            isReleased: Boolean(row.is_released),
-          }))
+          (lessonsResult.data ?? []).map((row) => {
+            const settings = settingsByLesson.get(row.lesson_number as number);
+            return {
+              lessonNumber: row.lesson_number as number,
+              lessonDate: (row.lesson_date as string) ?? null,
+              startsAt: (row.starts_at as string) ?? null,
+              titleOverride: (row.title_override as string) ?? null,
+              topicOverride: (row.topic_override as string) ?? null,
+              isReleased: Boolean(row.is_released),
+              videoUrl: (settings?.video_url as string) ?? null,
+              videoReleased: Boolean(settings?.is_released),
+            };
+          })
         );
         setAssignments(
           (assignmentsResult.data ?? []).map((row) => ({
@@ -301,8 +313,24 @@ export function useCohortSchedule(cohortId: string | null) {
         is_released: row.isReleased,
       })),
     });
+    if (rpcError) {
+      reload();
+      return toError(rpcError);
+    }
+
+    // Ссылки на записи живут в отдельной таблице (cohort_lesson_settings) без
+    // своего RPC — прямой upsert, RLS уже разрешает admin/expert писать сюда.
+    const { error: settingsError } = await supabase.from("cohort_lesson_settings").upsert(
+      rows.map((row) => ({
+        cohort_id: cohortId,
+        lesson_number: row.lessonNumber,
+        video_url: row.videoUrl?.trim() || null,
+        is_released: row.videoReleased,
+      })),
+      { onConflict: "cohort_id,lesson_number" }
+    );
     reload();
-    return toError(rpcError);
+    return toError(settingsError);
   };
 
   const saveAssignments = async (rows: AssignmentScheduleRow[]): Promise<RpcError> => {

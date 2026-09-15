@@ -38,6 +38,8 @@ export type LessonScheduleRow = {
   titleOverride: string | null;
   topicOverride: string | null;
   isReleased: boolean;
+  videoUrl: string | null;
+  videoReleased: boolean;
 };
 
 export type AssignmentScheduleRow = {
